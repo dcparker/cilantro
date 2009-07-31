@@ -1,7 +1,7 @@
 require 'rubygems'
 
 # DEPENDENCIES
-require 'Haml'
+require 'haml'
 
 # APP LIBRARIES
 require 'lib/require_all'
