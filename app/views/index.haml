@@ -1,0 +1,10 @@
+#header.span-24
+  %h1 Cilantro
+  %p.subtext Changing the world, one app at a time.
+#content
+  %p Hello World!
+  - if @id
+    %p== You're at /show/<b>#{@id}</b>.
+  - if @name
+    %p== You entered '#{@name}'.
+  = partial(:form)
