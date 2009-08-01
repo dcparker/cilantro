@@ -43,6 +43,31 @@ def redirect_io(logfile_name)
   STDERR.sync = true
 end
 
+def run_the_app
+  begin
+    require 'config/init'
+    Sinatra::Application.run!
+  rescue => e
+    # Make the magic happen!
+    # (jabber me when there's an error loading an app)
+    if File.exists?('config/notify.yml')
+      jabber = YAML.load_file('config/notify.yml')
+      begin
+        require 'xmpp4r'
+        client = Jabber::Client.new(Jabber::JID.new("#{jabber[:username]}/cilantro"))
+        client.connect('talk.google.com', '5222')
+        client.auth(jabber[:password])
+        client.send(Jabber::Presence.new.set_type(:available))
+        msg = Jabber::Message.new(jabber[:notify], "#{e.inspect}\n#{e.backtrace.join("\n")}")
+        msg.type = :chat
+        client.send(msg)
+        client.close
+      rescue
+      end
+    end
+  end
+end
+
 options = {}
 
 optparse = OptionParser.new do |opts|
@@ -59,6 +84,12 @@ optparse = OptionParser.new do |opts|
     options[:specified_port] = true
   end
 
+  options[:config] = nil
+  opts.on( '-c', '--config CONFIG', "Use config file CONFIG" ) do |config|
+    raise if !File.exists?(config)
+    options[:config] = config
+  end
+
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
     exit
@@ -70,7 +101,7 @@ optparse.parse!
 action = ARGV[0]
 directory = ARGV[1]
 if directory.nil?
-  if ['run', 'start', 'stop', 'restart'].include?(action)
+  if action =~ /^(run|start|stop|status|restart)$/
     directory = Dir.pwd
   elsif action.nil?
     directory = Dir.pwd
@@ -84,15 +115,36 @@ if directory == '.'
   directory = Dir.pwd
 end
 
+if (options[:config] || (!options[:specified_port] && File.exists?("#{directory}/config/cilantro.yml"))) && action =~ /start/
+  require 'yaml'
+  config = YAML.load_file(options[:config] || "#{directory}/config/cilantro.yml")
+  if config.is_a?(Hash)
+    ports = config[:ports]
+    options[:port] = ports.pop unless ports.empty? # if no ports specified, we'll continue with the default port 5000
+    # Then we need to start a few more starter processes if there are more ports to run on
+    ports.each do |port|
+      system "#{$0} #{action} \"#{directory}\" --port #{port}#{' --verbose' if options[:verbose]}"
+    end
+  end
+end
+
 # Start our stuff
 Dir.chdir(directory)
 
+puts "Here"
+
 case action
 when 'run'
-  require 'rubygems'
-  require 'sinatra'
-  Sinatra::Application.set :port, options[:port]
-  require 'config/init'
+  if File.exists?('config/init.rb')
+    require 'rubygems'
+    require 'sinatra'
+    Sinatra::Application.set :run, Proc.new { false }
+    Sinatra::Application.set :port, options[:port]
+    run_the_app
+  else
+    puts "ERROR: #{directory} doesn't seem to be a Cilantro directory (missing config/init.rb)"
+    exit
+  end
 when 'start'
   # Check whether environment is sane...
   #   - config/init
@@ -126,7 +178,7 @@ when 'start'
     end
     $process_id = Process.pid
 
-    redirect_io(File.directory?('log') ? "log/cilantro.#{$process_id}.log" : "config/cilantro.#{$process_id}.log")
+    redirect_io(File.directory?('log') ? "log/cilantro.#{options[:port]}.log" : "config/cilantro.#{options[:port]}.log")
 
     File.open("config/cilantro.#{$process_id}.pid", 'w') do |pidfile|
       pidfile << options[:port]
@@ -138,13 +190,25 @@ when 'start'
 
     require 'rubygems'
     require 'sinatra'
-    Sinatra::Application.set :run, Proc.new { true }
+    Sinatra::Application.set :run, Proc.new { false }
     Sinatra::Application.set :port, options[:port]
-    require 'config/init'
+    run_the_app
   else
-    puts "ERROR: #{directory} doesn't seem to be a Cilantro directory (looking for config/init.rb)."
+    puts "ERROR: #{directory} doesn't seem to be a Cilantro directory (missing config/init.rb)"
     exit
   end
+when 'status'
+  count = 0
+  pidfiles = Dir.glob("config/cilantro.*.pid")
+  pidfiles.each do |pidfile|
+    pid = pidfile.match(/(\d+)/)[0]
+    port = File.read(pidfile).chomp
+    if options[:port] == port || !options[:specified_port]
+      puts "[STATUS] Cilantro app running on port #{port}..."
+      count += 1
+    end
+  end
+  puts "#{count} Cilantro running for #{directory}."
 when 'stop'
   count = 0
   pidfiles = Dir.glob("config/cilantro.*.pid")
