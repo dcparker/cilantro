@@ -1,0 +1,44 @@
+h1. Start Sinatra with Cilantro!
+
+Cilantro is a structured starter-app built on Sinatra. It comes with a daemon manager script as well (see below).
+Cilantro uses a basic structure similar to Rails, with controllers, models, and views folders in the app directory.
+A config, lib and public directories are also used, as may be familiar to you. All ruby files in the lib directory
+are require'd, as are all controllers and optionally, all models. A simple rendering engine is included for your
+convenience, but as it is very simple you are free to enhance it as you like.
+
+Beyond this structure, it's all Sinatra. For your models, you are free to use whatever you like: DataMapper,
+ActiveRecord, or anything else. It's up to you. There are no walls, and this server is *very* fast.
+
+h1. bin/cilantro
+
++ You'll want to put this script somewhere into your PATH, such as perhaps /usr/local/bin.
+
+h4. Run a Cilantro app:
+
+From within the app directory, run: cilantro
+
+Or, from outside, run: cilantro /path/to/application
+
+Cilantro will run on port 5000 by default, but you can add --port NUMBER if you want.
+
+h4. Start a Cilantro app daemon:
+
+Again, from within the directory: cilantro start
+
+Or, from outside, run: cilantro start /path/to/application
+
+Cilantro will look for a config/cilantro.yml, and if this yml config contains a :port list, it will start a daemon for each of the ports specified.
+
+h4. Stop a Cilantro app daemon:
+
+From within the app directory: cilantro stop
+
+Or from outside: cilantro stop /path/to/application
+
+h4. Check the status of services for an app:
+
+From within the app directory: cilantro status
+
+From outside: cilantro status /path/to/application
+
+Cilantro will report on the number of services that are running, and their port numbers.
