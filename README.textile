@@ -13,32 +13,25 @@ h1. bin/cilantro
 
 + You'll want to put this script somewhere into your PATH, such as perhaps /usr/local/bin.
 
-h4. Run a Cilantro app:
+h3. Run a Cilantro app:
 
 From within the app directory, run: cilantro
-
 Or, from outside, run: cilantro /path/to/application
-
 Cilantro will run on port 5000 by default, but you can add --port NUMBER if you want.
 
-h4. Start a Cilantro app daemon:
+h3. Start a Cilantro app daemon:
 
 Again, from within the directory: cilantro start
-
 Or, from outside, run: cilantro start /path/to/application
-
 Cilantro will look for a config/cilantro.yml, and if this yml config contains a :port list, it will start a daemon for each of the ports specified.
 
-h4. Stop a Cilantro app daemon:
+h3. Stop a Cilantro app daemon:
 
 From within the app directory: cilantro stop
-
 Or from outside: cilantro stop /path/to/application
 
-h4. Check the status of services for an app:
+h3. Check the status of services for an app:
 
 From within the app directory: cilantro status
-
 From outside: cilantro status /path/to/application
-
 Cilantro will report on the number of services that are running, and their port numbers.
