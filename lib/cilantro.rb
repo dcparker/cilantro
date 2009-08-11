@@ -15,3 +15,17 @@ module Renderer
 end
 
 include Renderer
+
+module Cilantro
+  class << self
+    def setup_database
+      if File.exists?('config/database.yml')
+        # warn if config does not have necessary values in it
+        DataMapper.setup(:default, YAML.load_file('config/database.yml'))
+      else
+        warn "Cannot set up the database: config/database.yml missing!"
+        exit
+      end
+    end
+  end
+end
