@@ -3,4 +3,4 @@
 :adapter:  mysql
 :database: cilantro_development
 :host: localhost
-:user: root
+:username: root

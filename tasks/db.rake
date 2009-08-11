@@ -37,7 +37,7 @@ namespace :db do
 
   desc "Create the database"
   task :create do
-    # config = DataMapper.config
+    config = Cilantro.database_config
     puts "Creating database '#{config[:database]}'"
     case config[:adapter]
     when 'postgres'
@@ -58,6 +58,8 @@ namespace :db do
     case config[:adapter]
     when 'postgres'
       `dropdb -U #{config[:username]} #{config[:database]}`
+    when 'mysql'
+      `mysqladmin -u #{config[:username]} #{config[:password] ? "-p'#{config[:password]}'" : ''} -f drop #{config[:database]}`
     else
       raise "Adapter #{config[:adapter]} not supported for dropping databases yet.\ntry db:automigrate"
     end
