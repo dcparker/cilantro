@@ -4,7 +4,7 @@ require 'rubygems'
 require 'haml'
 
 # APP LIBRARIES
-require 'lib/require_all'
+require File.expand_path(File.dirname(__FILE__) + '/../lib') + '/cilantro'
 require_all 'lib/**/*.rb'
 
 # DATAMAPPER MODELS

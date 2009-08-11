@@ -1,4 +1,6 @@
 ---
 # This is a sample database file for the DataMapper ORM, for use with Cilantro
-:adapter:  sqlite3
-:database: config/development.sqlite
+:adapter:  mysql
+:database: cilantro_development
+:host: localhost
+:user: root

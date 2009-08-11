@@ -1,4 +1,3 @@
-
 require 'fileutils'
 
 namespace :db do
@@ -54,8 +53,8 @@ namespace :db do
 
   desc "Drop the database (postgres only)"
   task :drop do
-    config = Merb::Orms::DataMapper.config
-    puts "Droping database '#{config[:database]}'"
+    config = Cilantro.database_config
+    puts "Dropping database '#{config[:database]}'"
     case config[:adapter]
     when 'postgres'
       `dropdb -U #{config[:username]} #{config[:database]}`
@@ -67,16 +66,3 @@ namespace :db do
   desc "Drop the database, and migrate from scratch"
   task :reset => [:drop, :create, :migrate]
 end
-
-namespace :sessions do
-  desc "Perform automigration for sessions"
-  task :create => :merb_env do
-    Merb::DataMapperSessionStore.auto_migrate!
-  end
-
-  desc "Clears sessions"
-  task :clear => :merb_env do
-    Merb::DataMapperSessionStore.all.destroy!
-  end
-end
-
