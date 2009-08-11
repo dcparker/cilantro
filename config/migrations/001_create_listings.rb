@@ -1,14 +1,6 @@
 require 'dm-types'
 include DataMapper::Types
 
-module SQL
-  module Mysql
-    def create_table_statement(quoted_table_name)
-      "CREATE TABLE #{quoted_table_name}"
-    end
-  end
-end
-
 migration 1, :create_listings do
   up do
     create_table(:listings) do
