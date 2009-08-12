@@ -167,6 +167,7 @@ module Cilantro
       # Make the magic happen!
       # (jabber me when there's an error loading an app)
       if config[:notify]
+        warn "\nNotifying #{config[:notify]} of the error."
         require 'rubygems'
         require 'xmpp4r'
         client = Jabber::Client.new(Jabber::JID.new("#{config[:username]}/cilantro"))
@@ -177,6 +178,8 @@ module Cilantro
         msg.type = :chat
         client.send(msg)
         client.close
+      else
+        warn "\n! Nobody configured to notify via jabber."
       end
     end
   end
