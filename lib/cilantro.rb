@@ -142,6 +142,10 @@ module Cilantro
   DATABASE_CFG = 'config/database.yml'
 
   class << self
+    def config
+      @config ||= ((YAML.load_file('config/cilantro.yml') if File.exists?('config/cilantro.yml')) || {})
+    end
+
     def database_config
       if File.exists?('config/linode.yml')
         return YAML.load_file('config/linode.yml')[:database]
@@ -157,6 +161,23 @@ module Cilantro
     def setup_database
       # warn if config does not have necessary values in it
       DataMapper.setup(:default, Cilantro.database_config)
+    end
+
+    def report_error(error)
+      # Make the magic happen!
+      # (jabber me when there's an error loading an app)
+      if config[:notify]
+        require 'rubygems'
+        require 'xmpp4r'
+        client = Jabber::Client.new(Jabber::JID.new("#{config[:username]}/cilantro"))
+        client.connect('talk.google.com', '5222')
+        client.auth(config[:password])
+        client.send(Jabber::Presence.new.set_type(:available))
+        msg = Jabber::Message.new(config[:notify], "#{error.inspect}\n#{error.backtrace.join("\n")}")
+        msg.type = :chat
+        client.send(msg)
+        client.close
+      end
     end
   end
 end

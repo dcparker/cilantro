@@ -14,3 +14,8 @@ get '/show/:id' do |id|
   @id = id
   magic :index
 end
+
+error do
+  Cilantro.report_error(env['sinatra.error'])
+  magic :error_page
+end

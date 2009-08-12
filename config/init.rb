@@ -5,13 +5,13 @@ require 'haml'
 
 # APP LIBRARIES
 require File.expand_path(File.dirname(__FILE__) + '/../lib') + '/cilantro'
-require_all 'lib/**/*.rb'
 
 # DATAMAPPER MODELS
 require 'dm-core'
 require 'dm-validations'
 require 'dm-timestamps'
 Cilantro.setup_database
+require_all 'lib/**/*.rb'
 require_all 'app/models/*.rb'
 
 # Load Controllers IF Sinatra is loaded.
@@ -22,4 +22,3 @@ if ::Object.const_defined?(:Sinatra)
   Sinatra::Application.set :static, true
   require_all 'app/controllers/*.rb'
 end
-
