@@ -1,3 +1,6 @@
+# Should make this a full application, not a micro-app structure.
+# See http://www.sinatrarb.com/intro.html, "Sinatra::Base - Middleware, Libraries, and Modular Apps"
+
 # Main page
 get '/' do
   magic :index

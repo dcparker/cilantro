@@ -1,4 +1,15 @@
 require 'fileutils'
+gem 'dm-migrations'
+require 'migration_runner'
+
+# This is a fix, at least for the linode server install of mysql
+module SQL
+  module Mysql
+    def create_table_statement(quoted_table_name)
+      "CREATE TABLE #{quoted_table_name}"
+    end
+  end
+end
 
 namespace :db do
   
@@ -13,8 +24,6 @@ namespace :db do
 
   namespace :migrate do
     task :load do
-      gem 'dm-migrations'
-      require 'migration_runner'
       FileList["config/migrations/*.rb"].each do |migration|
         load migration
       end

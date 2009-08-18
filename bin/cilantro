@@ -47,20 +47,24 @@ def report_error(e)
   # Make the magic happen!
   # (jabber me when there's an error loading an app)
   if File.exists?('config/cilantro.yml')
-    jabber = YAML.load_file('config/cilantro.yml')
-    begin
-      require 'rubygems'
-      require 'xmpp4r'
-      client = Jabber::Client.new(Jabber::JID.new("#{jabber[:username]}/cilantro"))
-      client.connect('talk.google.com', '5222')
-      client.auth(jabber[:password])
-      client.send(Jabber::Presence.new.set_type(:available))
-      msg = Jabber::Message.new(jabber[:notify], "#{e.inspect}\n#{e.backtrace.join("\n")}")
-      msg.type = :chat
-      client.send(msg)
-      client.close
-    rescue => f
-      raise f
+    jabber = YAML.load_file('config/cilantro.yml') || {}
+    if jabber[:notify]
+      begin
+        require 'rubygems'
+        require 'xmpp4r'
+        client = Jabber::Client.new(Jabber::JID.new("#{jabber[:username]}/cilantro"))
+        client.connect('talk.google.com', '5222')
+        client.auth(jabber[:password])
+        client.send(Jabber::Presence.new.set_type(:available))
+        msg = Jabber::Message.new(jabber[:notify], "#{e.inspect}\n#{e.backtrace.join("\n")}")
+        msg.type = :chat
+        client.send(msg)
+        client.close
+      rescue => f
+        raise f
+      end
+    else
+      raise e
     end
   else
     raise e
@@ -135,7 +139,7 @@ when File.exists?("#{directory}/config/cilantro.yml")
   YAML.load_file("#{directory}/config/cilantro.yml")
 else
   {}
-end
+end || {}
   
 if (options[:config] || (!options[:specified_port] && File.exists?("#{directory}/config/cilantro.yml"))) && action =~ /start/
   if $config.is_a?(Hash)
@@ -151,7 +155,7 @@ if (options[:config] || (!options[:specified_port] && File.exists?("#{directory}
 end
 
 # Start our stuff
-Dir.chdir(directory)
+Dir.chdir(directory) if File.directory?(directory)
 write_dir = File.directory?('log') ? 'log' : 'config'
 
 begin
@@ -173,8 +177,16 @@ begin
       pid = pidfile.match(/(\d+)/)[0]
       port = File.read(pidfile).chomp
       if options[:port].to_s == port.to_s
-        puts "[WARN] Cilantro app already running on #{port}!"
-        exit
+        # Check to see if it's actually running:
+        if `which pidof` == '' || pid == `pidof "cilantro [#{port.to_s}]"`.chomp
+          puts "[WARN] Cilantro app already running on #{port}! Trying again in 1 seconds..."
+          sleep 1
+          exit if pid == `pidof "cilantro [#{port.to_s}]"`.chomp
+        end
+        if File.exists?(pidfile)
+          File.delete(pidfile)
+          puts "[WARN] Cilantro app must have ended prematurely: stale pid file detected and removed."
+        end
       end
     end
 
@@ -250,16 +262,37 @@ begin
       pid = pidfile.match(/(\d+)/)[0]
       port = File.read(pidfile).chomp
       if options[:port] == port || !options[:specified_port]
-        puts "[STOP] Cilantro app in #{directory} on port #{port}..."
-        Process.kill("INT", pid.to_i)
-        count += 1
+        # Check to see if it's actually running:
+        if `which pidof` == '' || pid == `pidof "cilantro [#{port.to_s}]"`.chomp
+          puts "[STOP] Cilantro app in #{directory} on port #{port}..."
+          Process.kill("INT", pid.to_i)
+          count += 1
+        end
+        sleep 0.5
+        if File.exists?(pidfile)
+          if `which pidof` == '' || pid == `pidof "cilantro [#{port.to_s}]"`.chomp
+            Process.kill("INT", pid.to_i) rescue nil
+            sleep 0.3
+            Process.kill("KILL", pid.to_i) rescue nil
+          end
+          if File.exists?(pidfile)
+            File.delete(pidfile) rescue nil
+            puts "[WARN] Cilantro app must have ended prematurely: stale pid file detected and removed."
+          end
+        end
       end
     end
     puts "Stopped #{count} Cilantro services."
   when 'restart'
     puts "sorry, not yet implemented...\n\nWhat I want here is to restart all cilantro services that match the commandline specifications, but each with the full options they started with."
+  when 'new'
+    system "git clone git://github.com/dcparker/cilantro.git #{directory}"
+    Dir.chdir(directory)
+    system "rm -rf .git"
+    system "git init"
+    puts "Now, commit your first commit, then do 'linode add domain.com'..."
   end
-rescue SyntaxError => e
+rescue SyntaxError, LoadError => e
   puts "Error: #{e}"
   report_error(e)
 rescue => e
