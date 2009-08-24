@@ -35,3 +35,16 @@ h3. Check the status of services for an app:
 From within the app directory: cilantro status
 From outside: cilantro status /path/to/application
 Cilantro will report on the number of services that are running, and their port numbers.
+
+h3. Tips 'n Tricks
+
+Put the following in your ~/.irbrc file:
+
+    if File.exists?("#{Dir.pwd}/config/init.rb") &&
+          File.exists?("#{Dir.pwd}/config/cilantro.yml")
+      puts "Loading Cilantro environment..."
+      require "#{Dir.pwd}/config/init.rb"
+      IRB.conf[:PROMPT_MODE] = :SIMPLE
+    end
+
+This will pre-load your app environment whenever you run irb in a cilantro app directory.
