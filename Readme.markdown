@@ -1,4 +1,4 @@
-h1. Start Sinatra with Cilantro!
+# Start Sinatra with Cilantro!
 
 Cilantro is a structured starter-app built on Sinatra. It comes with a daemon manager script as well (see below).
 Cilantro uses a basic structure similar to Rails, with controllers, models, and views folders in the app directory.
@@ -9,41 +9,41 @@ convenience, but as it is very simple you are free to enhance it as you like.
 Beyond this structure, it's all Sinatra. For your models, you are free to use whatever you like: DataMapper,
 ActiveRecord, or anything else. It's up to you. There are no walls, and this server is *very* fast.
 
-h1. bin/cilantro
+# bin/cilantro
 
 + You'll want to put this script somewhere into your PATH, such as perhaps /usr/local/bin.
 
-h3. Run a Cilantro app:
+### Run a Cilantro app:
 
 From within the app directory, run: cilantro
 Or, from outside, run: cilantro /path/to/application
 Cilantro will run on port 5000 by default, but you can add --port NUMBER if you want.
 
-h3. Start a Cilantro app daemon:
+### Start a Cilantro app daemon:
 
 Again, from within the directory: cilantro start
 Or, from outside, run: cilantro start /path/to/application
 Cilantro will look for a config/cilantro.yml, and if this yml config contains a :port list, it will start a daemon for each of the ports specified.
 
-h3. Stop a Cilantro app daemon:
+### Stop a Cilantro app daemon:
 
 From within the app directory: cilantro stop
 Or from outside: cilantro stop /path/to/application
 
-h3. Check the status of services for an app:
+### Check the status of services for an app:
 
 From within the app directory: cilantro status
 From outside: cilantro status /path/to/application
 Cilantro will report on the number of services that are running, and their port numbers.
 
-h3. Tips 'n Tricks
+### Tips 'n Tricks
 
 Put the following in your ~/.irbrc file:
 
-    if File.exists?("#{Dir.pwd}/config/init.rb") &&
-          File.exists?("#{Dir.pwd}/config/cilantro.yml")
+    if File.exists?("lib/cilantro.rb")
       puts "Loading Cilantro environment..."
-      require "#{Dir.pwd}/config/init.rb"
+      require "lib/cilantro.rb"
+      Cilantro.load_environment
       IRB.conf[:PROMPT_MODE] = :SIMPLE
     end
 
