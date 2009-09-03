@@ -74,4 +74,4 @@ module Templater
   end
 end
 
-Application.send(:include, Templater)
+Application.send(:include, Templater) if ::Object.const_defined?(:Application)
