@@ -1,1 +1,6 @@
 config/development.sqlite
+gems/gems
+gems/doc
+gems/bin
+doc
+config/NaturalDocs/Data

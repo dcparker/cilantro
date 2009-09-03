@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+# File: bin/cilantro
 # Cilantro is a simple app structure for use with Sinatra, and this is the
 # start/stop/restart script. All it does is step into the given directory,
 # and require sinatra and then config/init.rb. It'll record its pid to a
@@ -71,12 +72,6 @@ def report_error(e)
   end
 end
 
-def run_the_app
-  require 'config/init'
-  Sinatra::Application.set :environment, $config[:environment] if $config[:environment]
-  Sinatra::Application.run!
-end
-
 options = {}
 
 optparse = OptionParser.new do |opts|
@@ -140,7 +135,7 @@ when File.exists?("#{directory}/config/cilantro.yml")
 else
   {}
 end || {}
-  
+
 if (options[:config] || (!options[:specified_port] && File.exists?("#{directory}/config/cilantro.yml"))) && action =~ /start/
   if $config.is_a?(Hash)
     options[:host] = $config[:host] if $config.has_key?(:host) && !options[:specified_host]
@@ -157,20 +152,23 @@ end
 # Start our stuff
 Dir.chdir(directory) if File.directory?(directory)
 write_dir = File.directory?('log') ? 'log' : 'config'
-lib_dir = Dir.glob(File.expand_path("#{Dir.pwd}/lib"))[0]
-$:.unshift lib_dir if lib_dir
+
+RACK_ENV = $config[:environment] || 'development'
 
 begin
   case action
   when 'run'
     if File.exists?('config/init.rb')
-      # Use a local copy of sinatra if it's present
-      require 'rubygems'
-      require 'sinatra'
-      Sinatra::Application.set :run, Proc.new { false }
-      Sinatra::Application.set :host, options[:host]
-      Sinatra::Application.set :port, options[:port]
-      run_the_app
+      require 'lib/cilantro'
+      Cilantro.load_environment
+      server = Cilantro.app
+      server.set(
+        :run => Proc.new { false },
+        :host => options[:host],
+        :port => options[:port],
+        :environment => RACK_ENV
+      )
+      server.run!
     else
       puts "ERROR: #{directory} doesn't seem to be a Cilantro directory (missing config/init.rb)"
       exit
@@ -236,12 +234,16 @@ begin
         File.delete("#{write_dir}/cilantro.#{$process_id}.pid")
       }
 
-      require 'rubygems'
-      require 'sinatra'
-      Sinatra::Application.set :run, Proc.new { false }
-      Sinatra::Application.set :host, options[:host]
-      Sinatra::Application.set :port, options[:port]
-      run_the_app
+      require 'lib/cilantro'
+      Cilantro.load_environment
+      server = Cilantro.app
+      server.set(
+        :run => Proc.new { false },
+        :host => options[:host],
+        :port => options[:port],
+        :environment => RACK_ENV
+      )
+      server.run!
     else
       puts "ERROR: #{directory} doesn't seem to be a Cilantro directory (missing config/init.rb)"
       exit
@@ -274,7 +276,7 @@ begin
         sleep 0.5
         if File.exists?(pidfile)
           if `which pidof` == '' || pid == `pidof "cilantro [#{port.to_s}]"`.chomp
-            Process.kill("INT", pid.to_i) rescue nil
+            Process.kill("TERM", pid.to_i) rescue nil
             sleep 0.3
             Process.kill("KILL", pid.to_i) rescue nil
           end
