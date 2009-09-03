@@ -1,7 +1,7 @@
 unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?('cilantro.rb')
   APP_ROOT = File.expand_path(File.dirname(__FILE__)+"/..") unless defined?(APP_ROOT)
 
-  RACK_ENV = 'irb' unless ::Object.const_defined?(:RACK_ENV)
+  RACK_ENV ||= :irb
 
   require File.dirname(__FILE__)+'/cilantro/mysql_fix'
 
@@ -25,19 +25,28 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
 
         # Beginning with RACK_ENV, we determine which pieces of the app's environment need to be loaded.
           # If in development or production mode, we need to load up Sinatra:
-          if RACK_ENV == 'development' || RACK_ENV == 'production'
+          if RACK_ENV == :development || RACK_ENV == :production
             require 'cilantro/sinatra'
             require 'cilantro/controller'
             server = Application
+            server.set :static => true, :public => 'public'
           end
-          if RACK_ENV == 'test'
+          if RACK_ENV == :test
             require 'sinatra'
             # server
           end
         # ****
 
-        # Load the entire app environment
+        # Load the app pre-environment
         require 'config/init'
+
+        # Lastly, we'll load the app files themselves: lib, models, then controllers
+          # lib/*.rb - those already loaded won't be reloaded.
+          Dir.glob("lib/*.rb").each {|file| require file.split(/\//).last }
+          # app/models/*.rb
+          Dir.glob("app/models/*.rb").each {|file| require file}
+          # app/controllers/*.rb UNLESS in irb
+          Dir.glob("app/controllers/*.rb").each {|file| require file} unless RACK_ENV == :irb
 
         # Lastly, we return the server object for this environment:
         return server

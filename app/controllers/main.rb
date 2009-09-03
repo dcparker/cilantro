@@ -8,25 +8,31 @@ class Main
 
   # Main page
   get '' do
-    magic :index
+    template :index
   end
 
   # Post a form to this url
   post 'form' do
     @name = params[:name]
-    magic :index
+    template :index
   end
 
-  scope 'show' do
+  scope 'listings' do
+
     # Show a listing
     get ':id' do |id|
       @id = id
-      magic :index
+      template :index
     end
+
+  end
+
+  get '', :host => /^api\./ do
+    # Show something for a 'GET /' request to subdomain 'api' (GET http://api.domain.com/)
   end
 
   error do
     Cilantro.report_error(env['sinatra.error'])
-    magic :error_page
+    template :error_page
   end
 end
