@@ -24,8 +24,9 @@ module Cilantro
       # These were pulled right from sinatra/base.rb
       def get(path, opts={}, &block)
         path = (scope + path).gsub(/\/\/+/,'/')
-        # puts "Route: GET #{path}"
+        puts "Route: GET #{path}"
         Application.get(path, opts, &block)
+        # Application.get(path, opts,)
       end
       def put(path, opts={}, &bk);    route 'PUT',    path, opts, &bk end
       def post(path, opts={}, &bk);   route 'POST',   path, opts, &bk end

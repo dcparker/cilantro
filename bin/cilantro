@@ -153,7 +153,7 @@ end
 Dir.chdir(directory) if File.directory?(directory)
 write_dir = File.directory?('log') ? 'log' : 'config'
 
-ENV['RACK_ENV'] = (RACK_ENV = $config[:environment] || :development).to_s
+RACK_ENV = (ENV['RACK_ENV'] = ($config[:environment] || 'development').to_s).to_sym
 
 begin
   case action

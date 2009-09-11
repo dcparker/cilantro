@@ -1,6 +1,3 @@
-# Should make this a full application, not a micro-app structure.
-# See http://www.sinatrarb.com/intro.html, "Sinatra::Base - Middleware, Libraries, and Modular Apps"
-
 class Main
   include Cilantro::Controller
 
@@ -8,13 +5,12 @@ class Main
 
   # Main page
   get '' do
-    template :index
+    template :index, :id => 'hi'
   end
 
   # Post a form to this url
   post 'form' do
-    @name = params[:name]
-    template :index
+    template :index, :name => params[:name], :id => 'hi'
   end
 
   scope 'listings' do
@@ -27,9 +23,9 @@ class Main
 
   end
 
-  get '', :host => /^api\./ do
-    # Show something for a 'GET /' request to subdomain 'api' (GET http://api.domain.com/)
-  end
+  # get '', :host => /^api\./ do
+  #   # Show something for a 'GET /' request to subdomain 'api' (GET http://api.domain.com/)
+  # end
 
   error do
     Cilantro.report_error(env['sinatra.error'])
