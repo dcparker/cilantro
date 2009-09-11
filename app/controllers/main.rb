@@ -5,7 +5,7 @@ class Main
 
   # Main page
   get '' do
-    template :index, :id => 'hi'
+    template :index, :msg => 'Peek-a-boo!'
   end
 
   # Post a form to this url

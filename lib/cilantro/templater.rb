@@ -6,26 +6,66 @@ require 'haml'
 # template.to_html
 module Cilantro
   class Template
+    class << self
+      def options
+        @options ||= {
+          :partial_prefix => '_'
+        }
+      end
+
+      def get_template(name, scope='/')
+        view_paths(scope).each do |vp|
+          if File.exists?(File.join([vp, "#{name}.haml"]))
+            return File.read(File.join([vp, "#{name}.haml"]))
+          end
+        end
+      end
+      
+      def get_partial(name, scope='/')
+        view_paths(scope).each do |vp|
+          if File.exists?(File.join([vp, "#{name}.haml"]))
+            return File.read(File.join([vp, "#{options[:partial_prefix]}#{name}.haml"]))
+          end
+        end
+        File.read("#{APP_ROOT}/app/views/_#{name}.haml")
+      end
+
+      def get_layout(name='default')
+        File.read("#{APP_ROOT}/app/views/layouts/#{name}.haml")
+      end
+
+      private
+        def view_paths(scope)
+          paths = scope.split('/').reject {|j| j==''}
+          view_paths = ["#{APP_ROOT}/app/views"]
+          paths.each do |l|
+            view_paths.unshift(view_paths.first + '/' + l)
+          end
+          view_paths
+        end
+    end
+
     attr_reader :name, :locals
 
     def self.options
       @options ||= {}
     end
 
-    def initialize(name, locals={})
+    def initialize(name, scope, locals={})
       @name = name
+      @scope = scope
       @locals = locals
       instance_eval(File.read("#{APP_ROOT}/app/views/#{@name}.rb")) if File.exists?("#{APP_ROOT}/app/views/#{@name}.rb")
     end
 
     def to_html
       @html ||= begin
-        content_for_layout = Haml::Engine.new(Templater.get_template(@name)).render(self, locals)
+        content_for_layout = Haml::Engine.new(Template.get_template(@name, @scope)).render(self, locals)
         if self.class.options[:layout] == false
           content_for_layout
         else
           self.class.options[:layout] ||= :default
-          Haml::Engine.new(Templater.get_layout(self.class.options[:layout])).render(self, {:content_for_layout => content_for_layout})
+          Haml::Engine.new(Template.get_layout(self.class.options[:layout])).render(self, {:content_for_layout => content_for_layout})
         end
       end
     end
@@ -39,7 +79,7 @@ module Cilantro
       if locals.has_key?(:with)
         partials(name, new_locals)
       else
-        Haml::Engine.new(Templater.get_partial(name)).render(self, new_locals)
+        Haml::Engine.new(Template.get_partial(name, @scope)).render(self, new_locals)
       end
     end
 
@@ -54,10 +94,10 @@ module Cilantro
 
       if looper && looper_name
         looper.collect do |single|
-          Haml::Engine.new(Templater.get_partial(name)).render(self, new_locals.merge(looper_name => single))
+          Haml::Engine.new(Template.get_partial(name, @scope)).render(self, new_locals.merge(looper_name => single))
         end.join
       else
-        Haml::Engine.new(Templater.get_partial(name)).render(self, new_locals)
+        Haml::Engine.new(Template.get_partial(name, @scope)).render(self, new_locals)
       end
     end
 
@@ -86,26 +126,13 @@ module Cilantro
   end
 
   module Templater
-    class << self
-      def get_template(name)
-        File.read("#{APP_ROOT}/app/views/#{name}.haml")
-      end
-      
-      def get_partial(name)
-        File.read("#{APP_ROOT}/app/views/_#{name}.haml")
-      end
-
-      def get_layout(name='default')
-        File.read("#{APP_ROOT}/app/views/layouts/#{name}.haml")
-      end
-    end
-
     # Method: template
     def template(name=nil, locals={})
       if name.nil?
         return @template
       else
-        @template = Template.new(name, locals)
+              # caller should probably look as many levels back as necessary to find a method with a space in it.
+        @template = Template.new(name, Application.scopes[caller[0].match(/`(.*?)'/)[1]], locals)
       end
       if block_given?
         yield @template
