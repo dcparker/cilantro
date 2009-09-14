@@ -2,6 +2,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
   APP_ROOT = File.expand_path(File.dirname(__FILE__)+"/..") unless defined?(APP_ROOT)
 
   RACK_ENV = (ENV['RACK_ENV'] && ENV['RACK_ENV'].to_sym) || :irb unless ::Object.const_defined?(:RACK_ENV)
+  IRB.conf[:PROMPT_MODE] = :SIMPLE if ::Object.const_defined?(:IRB)
 
   require File.dirname(__FILE__)+'/cilantro/system/mysql_fix'
 
@@ -9,7 +10,10 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
     DATABASE_CFG = "#{APP_ROOT}/config/database.yml"
 
     class << self
-      def load_environment
+      def load_environment(env=nil)
+        const_set("RACK_ENV", env) if env
+        ENV['RACK_ENV'] = RACK_ENV.to_s
+
         $: << APP_ROOT+'/lib' unless $:.include?(APP_ROOT+'/lib')
 
         require 'rubygems'
