@@ -1,9 +1,10 @@
 require 'haml'
 
 # template :index
-# template.layout
-# template.flash
-# template.to_html
+# template :index, :layout => :bunnies
+# template.flash "You've won!"
+# template.user = "Jon Doe"
+# return template.to_html
 module Cilantro
   class Template
     class << self

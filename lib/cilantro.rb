@@ -21,11 +21,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
 
         server = true
         # First we'll sandbox rubygems if it looks like a sandbox is being used:
-        if File.exists?("#{APP_ROOT}/gems")
-          # Oh but first, go ahead and install any missing gems (PLEASE, only include gems/specifications and gems/cache in your git repo)
-            require 'cilantro/system/install_missing_gems'
-          Gem.use_paths("#{APP_ROOT}/gems", ["#{APP_ROOT}/gems"])
-        end
+        require 'cilantro/system/gem_sandbox'
 
         # Beginning with RACK_ENV, we determine which pieces of the app's environment need to be loaded.
           # If in development or production mode, we need to load up Sinatra:
