@@ -15,15 +15,15 @@ module Cilantro
           if s.nil?
             @scope || ''
           else
-            s += '/' unless s =~ /\/$/
-            @scope = s
+            @scope = s.to_s.gsub(/\/+$/,'')
+            @scope = '/' if @scope == ''
           end
         end
       end
 
       # These were pulled right from sinatra/base.rb
       def get(path, opts={}, &block)
-        path = (scope + path).gsub(/\/\/+/,'/')
+        path = (scope + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
         # puts "Route: GET #{path}"
         Application.scopes["GET #{path}"] = scope
         Application.get(path, opts, &block)
@@ -34,7 +34,7 @@ module Cilantro
       def head(path, opts={}, &bk);   route 'HEAD',   path, opts, &bk end
 
       def route(method, path, opts, &bk)
-        path = (scope + path).gsub(/\/\/+/,'/')
+        path = (scope + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
         # puts "Route: #{method} #{path}"
         Application.scopes["#{method} #{path}"] = scope
         Application.send(:route, method, path, opts, &bk)
