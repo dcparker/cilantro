@@ -1,10 +1,29 @@
 module Cilantro
+  ########################################################################
+  # Module: Cilantro::Controller
+  # Provides Controller methods
+  #
+  # To generate rich pages, see: <Cilantro::Templater>
   module Controller
     def self.included(base)
-      base.extend Methods
+      base.extend ClassMethods
     end
 
-    module Methods
+    # Section: Class Methods
+    module ClassMethods
+      ########################################################################
+      # Method: scope(string)
+      # Define scope for the next routes. The scope will be prepended to routes.
+      # The scope is also saved for each route and used to find views for that
+      # route.
+      #
+      # Example: 
+      # > scope = '/people'
+      # > get 'new' do 
+      # >   template :new
+      # > end
+      # > # GET /people/new
+      # > #  -> action is run, template is found in: /views/people/new.haml
       def scope(s=nil)
         if block_given?
           old_scope = @scope
@@ -22,6 +41,10 @@ module Cilantro
       end
 
       # These were pulled right from sinatra/base.rb
+
+      ########################################################################
+      # Method: get(path, opts={}, &block)
+      # Create a route matching the HTTP GET method and the given path regexp.
       def get(path, opts={}, &block)
         path = (scope + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
         # puts "Route: GET #{path}"
@@ -39,12 +62,26 @@ module Cilantro
         Application.scopes["#{method} #{path}"] = scope
         Application.send(:route, method, path, opts, &bk)
       end
+
+      ########################################################################
+      # Method: error(*errors, &block)
+      # Define the proper response for errors.
+      #
+      # Expected Output: HTTP message body (String).
+      #
+      # Example: 
+      # > error do
+      # >   Cilantro.report_error(env['sinatra.error'])   # this could jabber the error to the admin
+      # >   return 'Something went wrong!'
+      # > end
       def error(*raised, &block)
         Application.error(*raised, &block)
       end
+
       def not_found(&block)
         error 404, &block
       end
+
       def before(&block)
         Application.before(&block)
       end
