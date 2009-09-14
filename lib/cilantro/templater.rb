@@ -13,25 +13,26 @@ module Cilantro
         }
       end
 
-      def get_template(name, scope='/')
+      def get_template(name, scope='/', ext='haml')
         view_paths(scope).each do |vp|
-          if File.exists?(File.join([vp, "#{name}.haml"]))
-            return File.read(File.join([vp, "#{name}.haml"]))
+          if File.exists?(File.join([vp, "#{name}.#{ext}"]))
+            return File.read(File.join([vp, "#{name}.#{ext}"]))
           end
         end
+        nil
       end
       
-      def get_partial(name, scope='/')
+      def get_partial(name, scope='/', ext='haml')
         view_paths(scope).each do |vp|
-          if File.exists?(File.join([vp, "#{name}.haml"]))
-            return File.read(File.join([vp, "#{options[:partial_prefix]}#{name}.haml"]))
+          if File.exists?(File.join([vp, "#{name}.#{ext}"]))
+            return File.read(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext}"]))
           end
         end
-        File.read("#{APP_ROOT}/app/views/_#{name}.haml")
+        nil
       end
 
-      def get_layout(name='default')
-        File.read("#{APP_ROOT}/app/views/layouts/#{name}.haml")
+      def get_layout(name='default', ext='haml')
+        File.read("#{APP_ROOT}/app/views/layouts/#{name}.#{ext}") rescue nil
       end
 
       private
@@ -48,24 +49,31 @@ module Cilantro
     attr_reader :name, :locals
 
     def self.options
-      @options ||= {}
+      @options ||= {:layout => :default}
     end
 
     def initialize(name, scope, locals={})
       @name = name
       @scope = scope
       @locals = locals
-      instance_eval(File.read("#{APP_ROOT}/app/views/#{@name}.rb")) if File.exists?("#{APP_ROOT}/app/views/#{@name}.rb")
+      @layout = locals.delete(:layout) || self.class.options[:layout]
+      # load view helpers
+      if template_helper = Template.get_template(@name, @scope, 'rb')
+        instance_eval(template_helper)
+      end
+      # load template helpers
+      if @layout && layout_helper = Template.get_layout(@layout, 'rb')
+        instance_eval(layout_helper)
+      end
     end
 
     def to_html
       @html ||= begin
         content_for_layout = Haml::Engine.new(Template.get_template(@name, @scope)).render(self, locals)
-        if self.class.options[:layout] == false
+        if @layout == false
           content_for_layout
         else
-          self.class.options[:layout] ||= :default
-          Haml::Engine.new(Template.get_layout(self.class.options[:layout])).render(self, {:content_for_layout => content_for_layout})
+          Haml::Engine.new(Template.get_layout(@layout)).render(self, {:content_for_layout => content_for_layout})
         end
       end
     end
