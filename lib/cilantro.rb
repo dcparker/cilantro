@@ -25,7 +25,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
 
         # Beginning with RACK_ENV, we determine which pieces of the app's environment need to be loaded.
           # If in development or production mode, we need to load up Sinatra:
-          puts "Environment: #{RACK_ENV.inspect}"
+          puts "Loading Cilantro environment: #{RACK_ENV.inspect}"
           if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
             require 'cilantro/sinatra'
             require 'cilantro/controller'
@@ -47,6 +47,10 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
 
         # Lastly, we return the server object for this environment:
         return server
+      end
+
+      def reload_environment
+        # ::Object.constants
       end
 
       def app
