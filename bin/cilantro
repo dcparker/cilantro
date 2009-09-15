@@ -311,7 +311,7 @@ begin
   when 'update'
     system "git stash save"
     system "git checkout cilantro"
-    system "git pull"
+    system "git pull cilantro master"
     system "git checkout master"
     system "git rebase cilantro"
     system "git stash pop"
