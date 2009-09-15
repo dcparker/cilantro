@@ -308,6 +308,13 @@ begin
     # git remote add origin ...whatever your origin remote should be...
     puts "Run 'git remote add origin ...' to add an origin for your project. Or if running on linode, simply run 'linode add domain.com'"
     puts "Whenever the cilantro project is updated, you can keep up to date by running 'cilantro update'"
+  when 'update'
+    system "git stash save"
+    system "git checkout cilantro"
+    system "git pull"
+    system "git checkout master"
+    system "git rebase cilantro"
+    system "git stash pop"
   end
 rescue SyntaxError, LoadError => e
   puts "Error: #{e}"
