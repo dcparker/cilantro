@@ -111,7 +111,7 @@ optparse.parse!
 action = ARGV[0]
 directory = ARGV[1]
 if directory.nil?
-  if action =~ /^(run|start|stop|status|restart)$/
+  if action =~ /^(run|start|stop|status|restart|update)$/
     directory = Dir.pwd
   elsif action.nil?
     directory = Dir.pwd
@@ -291,9 +291,9 @@ begin
   when 'restart'
     puts "sorry, not yet implemented...\n\nWhat I want here is to restart all cilantro services that match the commandline specifications, but each with the full options they started with."
   when 'new'
-    # mkdir anw
+    # mkdir app
     system "mkdir #{directory}"
-    # cd anw
+    # cd app
     Dir.chdir(directory)
     # git init
     system "git init"

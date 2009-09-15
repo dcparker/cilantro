@@ -140,6 +140,7 @@ module Cilantro
       if name.nil?
         return @template
       else
+        raise ArgumentError, "The first time you call `template' you must supply the name of the template to be used!" unless name
               # caller should probably look as many levels back as necessary to find a method with a space in it.
         @template = Template.new(name, Application.scopes[caller[0].match(/`(.*?)'/)[1]], locals)
       end
