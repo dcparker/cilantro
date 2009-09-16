@@ -25,12 +25,18 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
 
         # Beginning with RACK_ENV, we determine which pieces of the app's environment need to be loaded.
           # If in development or production mode, we need to load up Sinatra:
-          puts "Loading Cilantro environment: #{RACK_ENV.inspect}"
+          puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{RACK_ENV.inspect}"
           if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
+            require File.dirname(__FILE__)+'/cilantro/auto_reload'
             require 'cilantro/sinatra'
+            @base_constants = ::Object.constants - ['CilantroApplication']
+            @base_required = $LOADED_FEATURES.dup - ['cilantro/sinatra.rb']
             require 'cilantro/controller'
-            server = Application
+            server = CilantroApplication
             server.set :static => true, :public => 'public'
+          else
+            @base_constants = ::Object.constants
+            @base_required = $LOADED_FEATURES.dup
           end
         # ****
 
@@ -50,11 +56,22 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
       end
 
       def reload_environment
-        # ::Object.constants
+        added_constants = ::Object.constants - @base_constants
+        added_constants.each do |const|
+          ::Object.send(:remove_const, const.to_sym)
+        end
+        $LOADED_FEATURES.replace(@base_required)
+        load_environment
+        set_options @server_options
+      end
+
+      def set_options(options)
+        @server_options = options
+        Cilantro.app.set @server_options
       end
 
       def app
-        ::Application
+        ::CilantroApplication
       end
 
       def config

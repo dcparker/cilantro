@@ -10,6 +10,7 @@ module Cilantro
     class << self
       def options
         @options ||= {
+          :layout => :default,
           :partial_prefix => '_'
         }
       end
@@ -25,7 +26,7 @@ module Cilantro
       
       def get_partial(name, scope='/', ext='haml')
         view_paths(scope).each do |vp|
-          if File.exists?(File.join([vp, "#{name}.#{ext}"]))
+          if File.exists?(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext}"]))
             return File.read(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext}"]))
           end
         end
@@ -48,10 +49,6 @@ module Cilantro
     end
 
     attr_reader :name, :locals
-
-    def self.options
-      @options ||= {:layout => :default}
-    end
 
     def initialize(name, scope, locals={})
       @name = name
@@ -142,7 +139,7 @@ module Cilantro
       else
         raise ArgumentError, "The first time you call `template' you must supply the name of the template to be used!" unless name
               # caller should probably look as many levels back as necessary to find a method with a space in it.
-        @template = Template.new(name, Application.scopes[caller[0].match(/`(.*?)'/)[1]], locals)
+        @template = Template.new(name, CilantroApplication.scopes[caller[0].match(/`(.*?)'/)[1]], locals)
       end
       if block_given?
         yield @template
@@ -152,4 +149,4 @@ module Cilantro
   end
 end
 
-Application.send(:include, Cilantro::Templater) if ::Object.const_defined?(:Application)
+CilantroApplication.send(:include, Cilantro::Templater) if ::Object.const_defined?(:CilantroApplication)

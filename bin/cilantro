@@ -161,14 +161,15 @@ begin
     if File.exists?('config/init.rb')
       require 'lib/cilantro'
       Cilantro.load_environment
-      server = Cilantro.app
-      server.set(
+      Cilantro.set_options(
+        :server => 'thin_cilantro',
+        # :server => 'thin',
         :run => Proc.new { false },
         :host => options[:host],
         :port => options[:port],
         :environment => RACK_ENV
       )
-      server.run!
+      Cilantro.app.run!
     else
       puts "ERROR: #{directory} doesn't seem to be a Cilantro directory (missing config/init.rb)"
       exit

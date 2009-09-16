@@ -36,6 +36,7 @@ module Cilantro
           else
             @scope = s.to_s.gsub(/\/+$/,'')
             @scope = '/' if @scope == ''
+            # puts "Scope: #{@scope}"
           end
         end
       end
@@ -48,8 +49,8 @@ module Cilantro
       def get(path, opts={}, &block)
         path = (scope + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
         # puts "Route: GET #{path}"
-        Application.scopes["GET #{path}"] = scope
-        Application.get(path, opts, &block)
+        CilantroApplication.scopes["GET #{path}"] = scope
+        CilantroApplication.get(path, opts, &block)
       end
       def put(path, opts={}, &bk);    route 'PUT',    path, opts, &bk end
       def post(path, opts={}, &bk);   route 'POST',   path, opts, &bk end
@@ -59,8 +60,8 @@ module Cilantro
       def route(method, path, opts, &bk)
         path = (scope + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
         # puts "Route: #{method} #{path}"
-        Application.scopes["#{method} #{path}"] = scope
-        Application.send(:route, method, path, opts, &bk)
+        CilantroApplication.scopes["#{method} #{path}"] = scope
+        CilantroApplication.send(:route, method, path, opts, &bk)
       end
 
       ########################################################################
@@ -75,7 +76,7 @@ module Cilantro
       # >   return 'Something went wrong!'
       # > end
       def error(*raised, &block)
-        Application.error(*raised, &block)
+        CilantroApplication.error(*raised, &block)
       end
 
       def not_found(&block)
@@ -83,7 +84,7 @@ module Cilantro
       end
 
       def before(&block)
-        Application.before(&block)
+        CilantroApplication.before(&block)
       end
     end
   end

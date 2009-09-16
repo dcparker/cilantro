@@ -1,5 +1,5 @@
 require 'sinatra/base'
-class Application < Sinatra::Base
+class CilantroApplication < Sinatra::Base
   def self.scopes
     @scopes ||= {}
   end
