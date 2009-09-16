@@ -10,6 +10,8 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
     DATABASE_CFG = "#{APP_ROOT}/config/database.yml"
 
     class << self
+      attr_accessor :auto_reload
+
       def load_environment(env=nil)
         const_set("RACK_ENV", env) if env
         ENV['RACK_ENV'] = RACK_ENV.to_s
@@ -27,13 +29,14 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
           # If in development or production mode, we need to load up Sinatra:
           puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{RACK_ENV.inspect}"
           if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
-            require File.dirname(__FILE__)+'/cilantro/auto_reload'
+            require File.dirname(__FILE__)+'/cilantro/auto_reload' if auto_reload
             require 'cilantro/sinatra'
             @base_constants = ::Object.constants - ['CilantroApplication']
             @base_required = $LOADED_FEATURES.dup - ['cilantro/sinatra.rb']
             require 'cilantro/controller'
             server = CilantroApplication
             server.set :static => true, :public => 'public'
+            server.set :server => (auto_reload ? 'thin_cilantro_proxy' : 'thin')
           else
             @base_constants = ::Object.constants
             @base_required = $LOADED_FEATURES.dup

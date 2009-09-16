@@ -162,7 +162,7 @@ begin
       require 'lib/cilantro'
       Cilantro.load_environment
       Cilantro.set_options(
-        :server => 'thin_cilantro',
+        # :server => 'thin_cilantro',
         # :server => 'thin',
         :run => Proc.new { false },
         :host => options[:host],

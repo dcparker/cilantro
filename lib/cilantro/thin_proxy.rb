@@ -17,4 +17,4 @@ module Rack
   end
 end
 
-Rack::Handler.register('thin_cilantro', 'Rack::Handler::Cilantro')
+Rack::Handler.register('thin_cilantro_proxy', 'Rack::Handler::Cilantro')
