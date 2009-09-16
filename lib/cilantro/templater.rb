@@ -1,5 +1,3 @@
-require 'haml'
-
 # template :index
 # template :index, :layout => :bunnies
 # template.flash "You've won!"
@@ -15,26 +13,36 @@ module Cilantro
         }
       end
 
-      def get_template(name, scope='/', ext='haml')
+      def get_template(name, scope='/', ext=nil)
         view_paths(scope).each do |vp|
-          if File.exists?(File.join([vp, "#{name}.#{ext}"]))
-            return File.read(File.join([vp, "#{name}.#{ext}"]))
+          if file = Dir.glob(File.join([vp, "#{name}.#{ext ? ext : '*'}"]))[0]
+            return file.match(/\.([^\.]+)$/)[1].to_sym, File.read(file)
           end
         end
         nil
       end
       
-      def get_partial(name, scope='/', ext='haml')
+      def get_partial(name, scope='/', ext=nil)
         view_paths(scope).each do |vp|
-          if File.exists?(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext}"]))
-            return File.read(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext}"]))
+          if file = Dir.glob(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext ? ext : '*'}"]))[0]
+            return file.match(/\.([^\.]+)$/)[1].to_sym, File.read(file)
           end
         end
         nil
       end
 
-      def get_layout(name='default', ext='haml')
-        File.read("#{APP_ROOT}/app/views/layouts/#{name}.#{ext}") rescue nil
+      def get_layout(name='default', ext=nil)
+        if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
+          return file.match(/\.([^\.]+)$/)[1].to_sym, File.read(file)
+        end
+      end
+
+      def engine(type)
+        @engine ||= {}
+        @engine[type] ||= begin
+          require File.dirname(__FILE__) + '/templater/' + type.to_s
+          Cilantro::Template.const_get(type.to_s.capitalize!).new(options)
+        end
       end
 
       private
@@ -57,21 +65,21 @@ module Cilantro
       @layout = locals.delete(:layout) || self.class.options[:layout]
       # load view helpers
       if template_helper = Template.get_template(@name, @scope, 'rb')
-        instance_eval(template_helper)
+        instance_eval(template_helper[1])
       end
       # load template helpers
       if @layout && layout_helper = Template.get_layout(@layout, 'rb')
-        instance_eval(layout_helper)
+        instance_eval(layout_helper[1])
       end
     end
 
     def to_html
       @html ||= begin
-        content_for_layout = Haml::Engine.new(Template.get_template(@name, @scope)).render(self, locals)
+        content_for_layout = render(Template.get_template(@name, @scope), self, locals)
         if @layout == false
           content_for_layout
         else
-          Haml::Engine.new(Template.get_layout(@layout)).render(self, {:content_for_layout => content_for_layout})
+          render(Template.get_layout(@layout), self, {:content_for_layout => content_for_layout})
         end
       end
     end
@@ -85,7 +93,7 @@ module Cilantro
       if locals.has_key?(:with)
         partials(name, new_locals)
       else
-        Haml::Engine.new(Template.get_partial(name, @scope)).render(self, new_locals)
+        render(Template.get_partial(name, @scope), self, new_locals)
       end
     end
 
@@ -100,11 +108,16 @@ module Cilantro
 
       if looper && looper_name
         looper.collect do |single|
-          Haml::Engine.new(Template.get_partial(name, @scope)).render(self, new_locals.merge(looper_name => single))
+          render(Template.get_partial(name, @scope), self, new_locals.merge(looper_name => single))
         end.join
       else
-        Haml::Engine.new(Template.get_partial(name, @scope)).render(self, new_locals)
+        render(Template.get_partial(name, @scope), self, new_locals)
       end
+    end
+
+    def render(template_package, context, locals)
+      type, template = *template_package
+      self.class.engine(type).render(template, context, locals)
     end
 
     def method_missing(name, value=nil)

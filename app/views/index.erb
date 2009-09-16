@@ -1,0 +1,10 @@
+<div id='header' class='span-24'>
+  <h1>Cilantro</h1>
+  <p class='subtext'>Changing the world, one app at a time.</p>
+</div>
+<div id='content'>
+  <p>Hello World!</p>
+  <% if msg %><p>Secret message: <b><%= msg %></b></p><% end %>
+  <% if name %><p>You entered '<%= name %>'.</p><% end %>
+  <%= partial :form, :name => name %>
+</div>
