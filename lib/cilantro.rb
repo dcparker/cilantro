@@ -62,7 +62,10 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
       def reload_environment
         added_constants = ::Object.constants - @base_constants
         added_constants.each do |const|
-          ::Object.send(:remove_const, const.to_sym)
+          begin
+            ::Object.send(:remove_const, const.to_sym)
+          rescue NameError
+          end
         end
         $LOADED_FEATURES.replace(@base_required)
         load_environment
