@@ -21,7 +21,6 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
         require 'rubygems'
         require 'rubygems/custom_require'
 
-        server = true
         # First we'll sandbox rubygems if it looks like a sandbox is being used:
         require 'cilantro/system/gem_sandbox'
 
@@ -34,9 +33,12 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
             @base_constants = ::Object.constants - ['CilantroApplication']
             @base_required = $LOADED_FEATURES.dup - ['cilantro/sinatra.rb']
             require 'cilantro/controller'
-            server = CilantroApplication
-            server.set :static => true, :public => 'public'
-            server.set :server => (auto_reload ? 'thin_cilantro_proxy' : 'thin')
+            CilantroApplication.set(
+              :static => true,
+              :public => 'public',
+              :server => (auto_reload ? 'thin_cilantro_proxy' : 'thin'),
+              :environment => RACK_ENV
+            )
           else
             @base_constants = ::Object.constants
             @base_required = $LOADED_FEATURES.dup
@@ -54,8 +56,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
           # app/controllers/*.rb UNLESS in irb
           Dir.glob("app/controllers/*.rb").each {|file| require file} unless RACK_ENV == :irb
 
-        # Lastly, we return the server object for this environment:
-        return server
+        return true
       end
 
       def reload_environment
