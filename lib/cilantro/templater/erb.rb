@@ -15,7 +15,7 @@ module Cilantro
         new_context.instance_eval("
           def method_missing(m, *args)
             @locals.has_key?(m) ? @locals[m] : @context.send(m, *args)
-          rescue MethodMissing
+          rescue NoMethodError
             nil
           end
         ")
