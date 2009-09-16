@@ -295,7 +295,7 @@ begin
     # git remote add cilantro git://github.com/dcparker/cilantro.git
     system "git remote add cilantro git://github.com/dcparker/cilantro.git"
     # git pull cilantro master
-    system "git pull cilantro master"
+    system "git pull cilantro cilantro"
     # git checkout -b master
     system "git checkout -b master"
     # git remote add origin ...whatever your origin remote should be...
@@ -304,7 +304,7 @@ begin
   when 'update'
     system "git stash save"
     system "git checkout cilantro"
-    system "git pull cilantro master"
+    system "git pull cilantro cilantro"
     system "git checkout master"
     system "git rebase cilantro"
     system "git stash pop"
