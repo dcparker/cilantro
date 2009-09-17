@@ -7,15 +7,17 @@
 #   + rubygems is loaded, but sandboxed to ./gems if ./gems exists
 #   + if we're running in server or test mode, sinatra has been loaded
 
+
 ###################
 # Section: Options
 # Set your Cilantro options here.
 Cilantro.auto_reload = true
 
+
 ###################
 # Section: Dependencies and Libraries
-require 'haml'
 require 'cilantro/templater'
+
 
 ###################
 # Section: Database Setup
