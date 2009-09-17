@@ -293,6 +293,8 @@ begin
     puts "Whenever the cilantro project is updated, you can keep up to date by running 'cilantro update'"
   when 'update'
     system "GIT_DIR=.cilantro.git git pull cilantro cilantro"
+  when 'git'
+    system "GIT_DIR=.cilantro.git #{ARGV.join(' ')}"
   end
 rescue SyntaxError, LoadError => e
   puts "Error: #{e}\n#{e.backtrace.join("\n")}"
