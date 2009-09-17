@@ -106,7 +106,7 @@ optparse = OptionParser.new do |opts|
   end
 end
 
-optparse.parse!
+optparse.parse! unless ARGV[0] == 'git'
 
 action = ARGV[0]
 directory = ARGV[1]
