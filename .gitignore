@@ -4,3 +4,4 @@ gems/doc
 gems/bin
 doc
 config/NaturalDocs/Data
+.cilantro.git
