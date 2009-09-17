@@ -111,7 +111,7 @@ optparse.parse!
 action = ARGV[0]
 directory = ARGV[1]
 if directory.nil?
-  if action =~ /^(run|start|stop|status|restart|update)$/
+  if action =~ /^(run|start|stop|status|restart|new|import|update|git)$/
     directory = Dir.pwd
   elsif action.nil?
     directory = Dir.pwd
@@ -284,9 +284,7 @@ begin
   when 'restart'
     puts "sorry, not yet implemented...\n\nWhat I want here is to restart all cilantro services that match the commandline specifications, but each with the full options they started with."
   when 'new'
-    # mkdir app
     system "git clone git://github.com/dcparker/cilantro.git \"#{directory}\""
-    # cd app
     Dir.chdir(directory)
     system "mv .git .cilantro.git"
     puts "Run 'git remote add origin ...' to add an origin for your project. Or if running on linode, simply run 'linode add domain.com'"
