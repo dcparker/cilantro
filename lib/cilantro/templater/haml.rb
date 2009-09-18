@@ -13,7 +13,7 @@ module Haml::Filters::Section
   def compile(precompiler, text)
     precompiler.instance_eval do
       section_name, text = text.split(/\n/,2)
-      push_silent "layout.unrendered_#{section_name} = ['haml', '#{precompiler.options[:filename]}', #{text.inspect}];"
+      push_silent "(layout.unrendered_#{section_name} ||= []).push(['haml', #{precompiler.options[:filename].inspect}, #{text.inspect}]);"
     end
   end
 end

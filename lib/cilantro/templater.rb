@@ -30,7 +30,9 @@ module Cilantro
     end
 
     def insert_section(name)
-      Template.engine('haml').render(locals.delete(:"unrendered_#{name}"), self, locals)
+      locals.delete(:"unrendered_#{name}").collect do |section|
+        Template.engine('haml').render(section, self, locals)
+      end
     end
 
     def method_missing(name, value=nil)
@@ -50,11 +52,8 @@ module Cilantro
         if value
           @locals[name] = value
         else
-          if @locals.has_key?(name)
-            return @locals[name]
-          elsif @locals.has_key?(:"unrendered_#{name}")
-            return insert_section(name)
-          end
+          return insert_section(name) if !@locals.has_key?(name) && @locals.has_key?(:"unrendered_#{name}")
+          return @locals[name]
         end
       end
 
@@ -183,6 +182,12 @@ module Cilantro
       self.class.engine(template_package.first).render(template_package, context, locals.merge(:layout => @layout))
     end
 
+    def insert_section(name)
+      locals.delete(:"unrendered_#{name}").collect do |section|
+        render(section, self, locals)
+      end
+    end
+
     def method_missing(name, value=nil)
       sign = if name.to_s =~ /^(.*)([\=\?])$/
         name = $1.to_sym
@@ -200,6 +205,7 @@ module Cilantro
         if value
           @locals[name] = value
         else
+          return insert_section(name) if !@locals.has_key?(name) && @locals.has_key?(:"unrendered_#{name}")
           return @locals[name]
         end
       end
