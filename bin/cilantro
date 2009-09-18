@@ -130,7 +130,7 @@ if directory == '.'
   directory = Dir.pwd
 end
 
-$config[:database_config] = nil if !File.exists?(conf) && !File.exists?(directory + '/' + conf)
+$config[:database_config] = nil if !File.exists?($config[:database_config]) && !File.exists?(directory + '/' + $config[:database_config])
 
 ports = []
 require 'yaml'
