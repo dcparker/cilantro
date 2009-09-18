@@ -121,9 +121,9 @@ module Cilantro
     end
 
     def method_missing(name, value=nil)
-      sign = if name =~ /([\=\?])$/
-        name.chop!
-        $1
+      sign = if name.to_s =~ /^(.*)([\=\?])$/
+        name = $1
+        $2
       else
         ''
       end
