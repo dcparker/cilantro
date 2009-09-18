@@ -4,11 +4,61 @@
 # template.user = "Jon Doe"
 # return template.to_html
 module Cilantro
+  class Layout
+    class << self
+      def get_layout(name, ext=nil)
+        if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
+          return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
+        end
+      end
+    end
+
+    attr_reader :name, :locals
+
+    def initialize(name)
+      @name = name
+      @locals = {}
+      # load template helper if present
+      if layout_helper = Layout.get_layout(@name, 'rb')
+        instance_eval(layout_helper.last)
+      end
+      @layout = Layout.get_layout(@name)
+    end
+
+    def render(content_for_layout)
+      Template.engine(@layout.first).render(@layout, self, locals.merge(:layout => @layout, :content_for_layout => content_for_layout))
+    end
+
+    def method_missing(name, value=nil)
+      sign = if name.to_s =~ /^(.*)([\=\?])$/
+        name = $1.to_sym
+        $2
+      else
+        ''
+      end
+
+      case sign
+      when '='
+        @locals[name] = value
+      when '?'
+        @locals.has_key?(name)
+      else
+        if value
+          @locals[name] = value
+        else
+          return @locals[name]
+        end
+      end
+
+      return self
+    end
+  end
+
   class Template
     class << self
       def options
         @options ||= {
-          :layout => :default,
+          :default_layout => :default,
           :partial_prefix => '_'
         }
       end
@@ -29,12 +79,6 @@ module Cilantro
           end
         end
         nil
-      end
-
-      def get_layout(name='default', ext=nil)
-        if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
-          return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
-        end
       end
 
       def engine(type)
@@ -62,25 +106,19 @@ module Cilantro
       @name = name
       @scope = scope
       @locals = locals
-      @layout = locals.delete(:layout) || self.class.options[:layout]
+      @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout])
       # load view helpers
       if template_helper = Template.get_template(@name, @scope, 'rb')
         instance_eval(template_helper.last)
-      end
-      # load template helpers
-      if @layout && layout_helper = Template.get_layout(@layout, 'rb')
-        instance_eval(layout_helper.last)
       end
     end
 
     def to_html
       @html ||= begin
         content_for_layout = render(Template.get_template(@name, @scope), self, locals)
-        if @layout == false
+        @layout ?
+          @layout.render(content_for_layout) :
           content_for_layout
-        else
-          render(Template.get_layout(@layout), self, {:content_for_layout => content_for_layout})
-        end
       end
     end
     alias :to_str :to_html
@@ -134,7 +172,7 @@ module Cilantro
     end
 
     def render(template_package, context, locals)
-      self.class.engine(template_package.first).render(template_package, context, locals)
+      self.class.engine(template_package.first).render(template_package, context, locals.merge(:layout => @layout))
     end
 
     def method_missing(name, value=nil)
@@ -154,14 +192,20 @@ module Cilantro
         if value
           @locals[name] = value
         else
-          @locals[name]
+          return @locals[name]
         end
       end
-      return @template
+
+      return self
     end
   end
 
   module Templater
+    # Method: layout
+    def layout(name)
+      @layout_name = name
+    end
+
     # Method: template
     def template(name=nil, locals={})
       if name.nil?
@@ -169,7 +213,7 @@ module Cilantro
       else
         raise ArgumentError, "The first time you call `template' you must supply the name of the template to be used!" unless name
               # caller should probably look as many levels back as necessary to find a method with a space in it.
-        @template = Template.new(name, CilantroApplication.scopes[caller[0].match(/`(.*?)'/)[1]], locals)
+        @template = Template.new(name, CilantroApplication.scopes[caller[0].match(/`(.*?)'/)[1]], {:layout => @layout_name}.merge(locals))
       end
       if block_given?
         yield @template
