@@ -130,8 +130,8 @@ if directory == '.'
   directory = Dir.pwd
 end
 
-puts "Using database config #{$config[:database_config]}" if $config[:database_config]
-$config[:database_config] = nil if $config[:database_config] && !File.exists?($config[:database_config]) && !File.exists?(directory + '/' + $config[:database_config])
+puts "Using database config #{$options[:database_config]}" if $options[:database_config]
+$options[:database_config] = nil if $options[:database_config] && !File.exists?($options[:database_config]) && !File.exists?(directory + '/' + $options[:database_config])
 
 ports = []
 require 'yaml'
