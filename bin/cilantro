@@ -100,6 +100,12 @@ optparse = OptionParser.new do |opts|
     $options[:config] = conf
   end
 
+  $options[:database_config] = nil
+  opts.on( '--database_config CONFIG', "Use database config file CONFIG") do |conf|
+    raise if !File.exists?(conf)
+    $options[:database_config] = conf
+  end
+
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
     exit
@@ -111,7 +117,7 @@ optparse.parse! unless ARGV[0] == 'git'
 action = ARGV[0]
 directory = ARGV[1]
 if directory.nil?
-  if action =~ /^(run|start|stop|status|restart|new|import|update|git)$/
+  if action =~ /^(run|start|stop|status|restart|new|import|update|git|gitwork)$/
     directory = Dir.pwd
   elsif action.nil?
     directory = Dir.pwd
@@ -161,7 +167,8 @@ def run_app!
   Cilantro.set_options(
     :run => Proc.new { false },
     :host => $options[:host],
-    :port => $options[:port]
+    :port => $options[:port],
+    :database_config => $options[:database_config]
   )
   Cilantro.app.run!
 end
@@ -294,11 +301,16 @@ begin
     system "mv cilantro/.git .cilantro.git"
     system "rm -rf cilantro/"
   when 'update'
-    system "sh -c \"GIT_DIR=.cilantro.git git stash save\""
-    system "sh -c \"GIT_DIR=.cilantro.git git pull origin cilantro\""
-    system "sh -c \"GIT_DIR=.cilantro.git git stash pop\""
+    ENV['GIT_DIR'] = '.cilantro.git'
+    system "git stash save"
+    system "git pull origin cilantro"
+    system "git stash pop"
   when 'git'
-    exec "sh -c \"GIT_DIR=.cilantro.git #{ARGV.join(' ')}\""
+    unless ENV['GIT_DIR'] == '.cilantro.git'
+      ENV['GIT_DIR'] = '.cilantro.git'
+      puts "Now using .cilantro.git. Type exit to return"
+      exec "bash --login"
+    end
   end
 rescue SyntaxError, LoadError => e
   puts "Error: #{e}\n#{e.backtrace.join("\n")}"

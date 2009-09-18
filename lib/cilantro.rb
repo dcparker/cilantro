@@ -7,8 +7,6 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
   require File.dirname(__FILE__)+'/cilantro/system/mysql_fix'
 
   module Cilantro
-    DATABASE_CFG = "#{APP_ROOT}/config/database.yml"
-
     class << self
       attr_accessor :auto_reload
 
@@ -75,12 +73,13 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
       end
 
       def set_options(options)
-        @server_options = options
+        @server_options ||= {}
+        @server_options.merge!(options)
         Cilantro.app.set @server_options
       end
 
       def app
-        ::CilantroApplication
+        defined?(CilantroApplication) ? ::CilantroApplication : nil
       end
 
       def config
@@ -88,12 +87,19 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
       end
 
       def database_config
-        if File.exists?(DATABASE_CFG)
-          return YAML.load_file(DATABASE_CFG)
-        else
-          warn "Cannot set up the database: #{APP_ROOT}/config/database.yml missing!"
+        cfg_file = Cilantro.app.database_config if Cilantro.app.respond_to?(:database_config)
+        cfg_file ||= "#{APP_ROOT}/config/database.yml"
+        if File.exists?(cfg_file)
+          cfg = (YAML.load_file(cfg_file) || {})
+          cfg = cfg[:database] if cfg[:database].is_a?(Hash)
+        end
+          
+        unless cfg
+          warn "Cannot set up the database: Config file (#{cfg_file}) missing!"
           exit
         end
+
+        cfg
       end
 
       def setup_database
