@@ -102,7 +102,6 @@ optparse = OptionParser.new do |opts|
 
   $options[:database_config] = nil
   opts.on( '--database_config CONFIG', "Use database config file CONFIG") do |conf|
-    raise if !File.exists?(conf)
     $options[:database_config] = conf
   end
 
@@ -130,6 +129,8 @@ end
 if directory == '.'
   directory = Dir.pwd
 end
+
+$config[:database_config] = nil if !File.exists?(conf) && !File.exists?(directory + '/' + conf)
 
 ports = []
 require 'yaml'
