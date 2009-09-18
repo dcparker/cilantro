@@ -26,7 +26,11 @@ module Cilantro
     end
 
     def render(content_for_layout)
-      Template.engine(@layout.first).render(@layout, self, locals.merge(:layout => @layout, :content_for_layout => content_for_layout))
+      Template.engine(@layout.first).render(@layout, self, locals.merge(:content_for_layout => content_for_layout))
+    end
+
+    def insert_section(name)
+      Template.engine('haml').render(locals.delete(:"unrendered_#{name}"), self, locals)
     end
 
     def method_missing(name, value=nil)
@@ -46,7 +50,11 @@ module Cilantro
         if value
           @locals[name] = value
         else
-          return @locals[name]
+          if @locals.has_key?(name)
+            return @locals[name]
+          elsif @locals.has_key?(:"unrendered_#{name}")
+            return insert_section(name)
+          end
         end
       end
 

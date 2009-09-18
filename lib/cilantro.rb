@@ -95,7 +95,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
             cfg = (YAML.load_file(@database_config_file) || {})
             cfg = cfg[:database] if cfg[:database].is_a?(Hash)
           end
-          puts "Database Config: #{cfg.inspect}"
+
           unless cfg
             warn "Cannot set up the database: Config information (#{@database_config_file}) missing!"
             exit

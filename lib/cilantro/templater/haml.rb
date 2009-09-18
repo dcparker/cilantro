@@ -1,5 +1,23 @@
 require 'haml'
 
+# Creates the :section haml filter.
+# Example usage:
+#     :section
+#       sidebar
+#       %p some links or such...
+#   then in some other location, such as the layout:
+#     = sidebar
+# The content in the sidebar section is then rendered in place.
+module Haml::Filters::Section
+  include Base
+  def compile(precompiler, text)
+    precompiler.instance_eval do
+      section_name, text = text.split(/\n/,2)
+      push_silent "layout.unrendered_#{section_name} = ['haml', '#{precompiler.options[:filename]}', #{text.inspect}];"
+    end
+  end
+end
+
 module Cilantro
   class Template
     class Haml
