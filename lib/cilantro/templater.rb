@@ -4,73 +4,7 @@
 # template.user = "Jon Doe"
 # return template.to_html
 module Cilantro
-  class Layout
-    class << self
-      def get_layout(name, ext=nil)
-        if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
-          return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
-        end
-      end
-    end
-
-    attr_reader :name, :locals
-
-    def initialize(name)
-      @name = name
-      @locals = {}
-      # load template helper if present
-      if layout_helper = Layout.get_layout(@name, 'rb')
-        instance_eval(layout_helper.last)
-      end
-      @layout = Layout.get_layout(@name)
-    end
-
-    def render(content_for_layout)
-      Template.engine(@layout.first).render(@layout, self, locals.merge(:content_for_layout => content_for_layout))
-    end
-
-    # def insert_section(name)
-    #   return [] unless @locals[:"unrendered_#{name}"].is_a?(Array)
-    #   @locals[name.to_sym] = @locals.delete(:"unrendered_#{name}").collect do |section|
-    #     render(section, self, @locals)
-    #   end
-    # end
-    def insert_section(name)
-      return [] unless @locals[:"unrendered_#{name}"].is_a?(Array)
-      @locals[name.to_sym] = @locals.delete(:"unrendered_#{name}").collect do |section|
-        is_a?(Template) ? render(section, self, @locals) : Template.engine('haml').render(section, self, @locals)
-      end
-      puts "Rendered: #{@locals[name.to_sym].inspect}"
-      @locals[name.to_sym]
-    end
-
-    def method_missing(name, value=nil)
-      sign = if name.to_s =~ /^(.*)([\=\?])$/
-        name = $1.to_sym
-        $2
-      else
-        ''
-      end
-
-      case sign
-      when '='
-        @locals[name] = value
-      when '?'
-        return @locals.has_key?(name) || @locals.has_key?(:"unrendered_#{name}")
-      else
-        if value
-          @locals[name] = value
-        else
-          return insert_section(name) if !@locals.has_key?(name) && @locals.has_key?(:"unrendered_#{name}")
-          return @locals[name]
-        end
-      end
-
-      return self
-    end
-  end
-
-  class Template < Layout
+  class Template
     class << self
       def options
         @options ||= {
@@ -122,7 +56,7 @@ module Cilantro
       @name = name
       @scope = scope
       @locals = locals
-      @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout])
+      @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout], @scope)
       # load view helpers
       if template_helper = Template.get_template(@name, @scope, 'rb')
         instance_eval(template_helper.last)
@@ -133,7 +67,7 @@ module Cilantro
       @html ||= begin
         content_for_layout = render(Template.get_template(@name, @scope), self, locals)
         @layout ?
-          @layout.render(content_for_layout) :
+          @layout.render!(content_for_layout) :
           content_for_layout
       end
     end
@@ -189,6 +123,64 @@ module Cilantro
 
     def render(template_package, context, locals)
       self.class.engine(template_package.first).render(template_package, context, locals.merge(:layout => @layout))
+    end
+
+    def insert_section(name)
+      return [] unless @locals[:"unrendered_#{name}"].is_a?(Array)
+      @locals[name.to_sym] = @locals.delete(:"unrendered_#{name}").collect do |section|
+        render(section, self, @locals)
+      end
+      @locals[name.to_sym]
+    end
+
+    def method_missing(name, value=nil)
+      sign = if name.to_s =~ /^(.*)([\=\?])$/
+        name = $1.to_sym
+        $2
+      else
+        ''
+      end
+
+      case sign
+      when '='
+        @locals[name] = value
+      when '?'
+        return @locals.has_key?(name) || @locals.has_key?(:"unrendered_#{name}")
+      else
+        if value
+          @locals[name] = value
+        else
+          return insert_section(name) if !@locals.has_key?(name) && @locals.has_key?(:"unrendered_#{name}")
+          return @locals[name]
+        end
+      end
+
+      return self
+    end
+  end
+
+  class Layout < Template
+    class << self
+      def get_layout(name, ext=nil)
+        if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
+          return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
+        end
+      end
+    end
+
+    def initialize(name, scope='/')
+      @name = name
+      @locals = {}
+      @scope = scope
+      # load template helper if present
+      if layout_helper = Layout.get_layout(@name, 'rb')
+        instance_eval(layout_helper.last)
+      end
+      @layout = Layout.get_layout(@name)
+    end
+
+    def render!(content_for_layout)
+      render(@layout, self, locals.merge(:content_for_layout => content_for_layout))
     end
   end
 
