@@ -29,10 +29,19 @@ module Cilantro
       Template.engine(@layout.first).render(@layout, self, locals.merge(:content_for_layout => content_for_layout))
     end
 
+    # def insert_section(name)
+    #   return [] unless @locals[:"unrendered_#{name}"].is_a?(Array)
+    #   @locals[name.to_sym] = @locals.delete(:"unrendered_#{name}").collect do |section|
+    #     render(section, self, @locals)
+    #   end
+    # end
     def insert_section(name)
-      locals.delete(:"unrendered_#{name}").collect do |section|
-        Template.engine('haml').render(section, self, locals)
+      return [] unless @locals[:"unrendered_#{name}"].is_a?(Array)
+      @locals[name.to_sym] = @locals.delete(:"unrendered_#{name}").collect do |section|
+        is_a?(Template) ? render(section, self, @locals) : Template.engine('haml').render(section, self, @locals)
       end
+      puts "Rendered: #{@locals[name.to_sym].inspect}"
+      @locals[name.to_sym]
     end
 
     def method_missing(name, value=nil)
@@ -47,7 +56,7 @@ module Cilantro
       when '='
         @locals[name] = value
       when '?'
-        @locals.has_key?(name)
+        return @locals.has_key?(name) || @locals.has_key?(:"unrendered_#{name}")
       else
         if value
           @locals[name] = value
@@ -61,7 +70,7 @@ module Cilantro
     end
   end
 
-  class Template
+  class Template < Layout
     class << self
       def options
         @options ||= {
@@ -180,37 +189,6 @@ module Cilantro
 
     def render(template_package, context, locals)
       self.class.engine(template_package.first).render(template_package, context, locals.merge(:layout => @layout))
-    end
-
-    def insert_section(name)
-      locals.delete(:"unrendered_#{name}").collect do |section|
-        render(section, self, locals)
-      end
-    end
-
-    def method_missing(name, value=nil)
-      sign = if name.to_s =~ /^(.*)([\=\?])$/
-        name = $1.to_sym
-        $2
-      else
-        ''
-      end
-
-      case sign
-      when '='
-        @locals[name] = value
-      when '?'
-        @locals.has_key?(name)
-      else
-        if value
-          @locals[name] = value
-        else
-          return insert_section(name) if !@locals.has_key?(name) && @locals.has_key?(:"unrendered_#{name}")
-          return @locals[name]
-        end
-      end
-
-      return self
     end
   end
 
