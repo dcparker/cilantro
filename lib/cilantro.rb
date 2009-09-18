@@ -86,16 +86,16 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
         @config ||= ((YAML.load_file("#{APP_ROOT}/config/cilantro.yml") if File.exists?("#{APP_ROOT}/config/cilantro.yml")) || {})
       end
 
+      attr_writer :database_config_file
       def database_config
-        cfg_file = Cilantro.app.database_config if Cilantro.app.respond_to?(:database_config)
-        cfg_file ||= "#{APP_ROOT}/config/database.yml"
-        if File.exists?(cfg_file)
-          cfg = (YAML.load_file(cfg_file) || {})
+        @database_config_file ||= "#{APP_ROOT}/config/database.yml"
+        if File.exists?(@database_config_file)
+          cfg = (YAML.load_file(@database_config_file) || {})
           cfg = cfg[:database] if cfg[:database].is_a?(Hash)
         end
         puts "Database Config: #{cfg.inspect}"
         unless cfg
-          warn "Cannot set up the database: Config file (#{cfg_file}) missing!"
+          warn "Cannot set up the database: Config information (#{@database_config_file}) missing!"
           exit
         end
 

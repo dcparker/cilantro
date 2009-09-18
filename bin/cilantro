@@ -165,12 +165,12 @@ RACK_ENV = (ENV['RACK_ENV'] = ($config[:environment] || 'development').to_s).to_
 
 def run_app!
   require 'lib/cilantro'
+  Cilantro.database_config_file = $options[:database_config]
   Cilantro.load_environment
   Cilantro.set_options(
     :run => Proc.new { false },
     :host => $options[:host],
-    :port => $options[:port],
-    :database_config => $options[:database_config]
+    :port => $options[:port]
   )
   Cilantro.app.run!
 end
