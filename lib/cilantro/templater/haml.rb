@@ -9,7 +9,7 @@ require 'haml'
 #     = sidebar
 # The content in the sidebar section is then rendered in place.
 module Haml::Filters::Section
-  include Base
+  include Haml::Filters::Base
   def compile(precompiler, text)
     precompiler.instance_eval do
       section_name, text = text.split(/\n/,2)
