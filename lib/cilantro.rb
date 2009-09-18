@@ -33,10 +33,12 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
             @base_constants = ::Object.constants - ['CilantroApplication']
             @base_required = $LOADED_FEATURES.dup - ['cilantro/sinatra.rb']
             require 'cilantro/controller'
-            CilantroApplication.set(
+            set_options(
               :static => true,
               :public => 'public',
               :server => (auto_reload ? 'thin_cilantro_proxy' : 'thin'),
+              :raise_errors => (RACK_ENV == :production),
+              :show_exceptions => !(RACK_ENV == :production),
               :environment => RACK_ENV
             )
           else
@@ -54,7 +56,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
           # app/models/*.rb
           Dir.glob("app/models/*.rb").each {|file| require file}
           # app/controllers/*.rb UNLESS in irb
-          Dir.glob("app/controllers/*.rb").each {|file| require file} unless RACK_ENV == :irb
+          Dir.glob("app/controllers/*.rb").each {|file| require file} if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
 
         return true
       end

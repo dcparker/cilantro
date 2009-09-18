@@ -14,13 +14,16 @@
   !! NOTE !! It is up to the callback to change the original object if necessary.
 */
 
-$.fn.edit_in_place = function(callback){
+$.fn.edit_in_place = function(init_value, callback){
   var $element = this;
   if($element.length>1){console.error("Call $().edit_in_place only on a singular jquery object.");}
   var $edit = $('<input type="text" class="edit_in_place" />');
-  $edit.css({'height' : $element.height()-2, 'width' : $element.width()-2});
+  var font_size = parseFloat($element.css('font-size').match(/(\d+)/)[1]);
+  var font_unit = $element.css('font-size').match(/\d+(.+)/)[1];
+  $edit.css({'height' : $element.height(), 'width' : $element.width()-2, 'font-size' : ''+((font_size-2)*3/4+2)+font_unit});
   $element.hide();
   $element.after($edit);
+  if(init_value)$edit.val($element.text());
   $edit.focus();
   $edit.bind('blur', function(){ // on blur, forget edits and reset.
     $edit.remove();

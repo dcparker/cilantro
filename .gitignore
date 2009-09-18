@@ -5,3 +5,4 @@ gems/bin
 doc
 config/NaturalDocs/Data
 .cilantro.git
+.DS_Store

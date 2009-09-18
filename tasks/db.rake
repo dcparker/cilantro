@@ -1,6 +1,6 @@
 require 'fileutils'
 gem 'dm-migrations'
-require 'migration_runner'
+require 'dm-migrations/migration_runner'
 
 # This is a fix, at least for the linode server install of mysql
 module SQL

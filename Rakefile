@@ -1,5 +1,9 @@
-require 'config/init'
 require 'fileutils'
+
+if File.exists?('lib/cilantro.rb')
+  require 'lib/cilantro'
+  Cilantro.load_environment(:rake)
+end
 
 # Load any app level custom rakefile extensions from lib/tasks
 tasks_path = File.join(File.dirname(__FILE__), "tasks")

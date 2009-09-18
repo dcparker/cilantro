@@ -21,7 +21,7 @@ module Cilantro
         ")
         context = new_context.instance_eval("binding")
         # Now, use the new context (binding) for rendering
-        ::ERB.new(template).result(context)
+        ::ERB.new(template.last).result(context)
       end
     end
   end

@@ -16,7 +16,7 @@ module Cilantro
       def get_template(name, scope='/', ext=nil)
         view_paths(scope).each do |vp|
           if file = Dir.glob(File.join([vp, "#{name}.#{ext ? ext : '*'}"]))[0]
-            return file.match(/\.([^\.]+)$/)[1].to_sym, File.read(file)
+            return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
           end
         end
         nil
@@ -25,7 +25,7 @@ module Cilantro
       def get_partial(name, scope='/', ext=nil)
         view_paths(scope).each do |vp|
           if file = Dir.glob(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext ? ext : '*'}"]))[0]
-            return file.match(/\.([^\.]+)$/)[1].to_sym, File.read(file)
+            return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
           end
         end
         nil
@@ -33,7 +33,7 @@ module Cilantro
 
       def get_layout(name='default', ext=nil)
         if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
-          return file.match(/\.([^\.]+)$/)[1].to_sym, File.read(file)
+          return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
         end
       end
 
@@ -65,11 +65,11 @@ module Cilantro
       @layout = locals.delete(:layout) || self.class.options[:layout]
       # load view helpers
       if template_helper = Template.get_template(@name, @scope, 'rb')
-        instance_eval(template_helper[1])
+        instance_eval(template_helper.last)
       end
       # load template helpers
       if @layout && layout_helper = Template.get_layout(@layout, 'rb')
-        instance_eval(layout_helper[1])
+        instance_eval(layout_helper.last)
       end
     end
 
@@ -93,6 +93,15 @@ module Cilantro
       if locals.has_key?(:with)
         partials(name, new_locals)
       else
+        # Catch locals set by the partial helper.
+        old_locals = @locals
+        @locals = {}
+        if partial_helper = Template.get_partial(name, @scope, 'rb')
+          instance_eval(partial_helper.last)
+        end
+        new_locals.merge!(@locals)
+        @locals = old_locals
+
         render(Template.get_partial(name, @scope), self, new_locals)
       end
     end
@@ -106,6 +115,15 @@ module Cilantro
         looper = new_locals.delete(looper_name)
       end
 
+      # Catch things defined by the partial's helper.
+      old_locals = @locals
+      @locals = {}
+      if partial_helper = Template.get_partial(name, @scope, 'rb')
+        instance_eval(partial_helper.last)
+      end
+      new_locals.merge!(@locals)
+      @locals = old_locals
+
       if looper && looper_name
         looper.collect do |single|
           render(Template.get_partial(name, @scope), self, new_locals.merge(looper_name => single))
@@ -116,13 +134,12 @@ module Cilantro
     end
 
     def render(template_package, context, locals)
-      type, template = *template_package
-      self.class.engine(type).render(template, context, locals)
+      self.class.engine(template_package.first).render(template_package, context, locals)
     end
 
     def method_missing(name, value=nil)
       sign = if name.to_s =~ /^(.*)([\=\?])$/
-        name = $1
+        name = $1.to_sym
         $2
       else
         ''

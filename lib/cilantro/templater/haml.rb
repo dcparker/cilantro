@@ -9,7 +9,7 @@ module Cilantro
 
       def render(template, context, locals)
         # Haml is pretty simple!
-        ::Haml::Engine.new(template).render(context, locals)
+        ::Haml::Engine.new(template.last, :filename => template[1]).render(context, locals)
       end
     end
   end
