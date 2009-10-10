@@ -2,6 +2,7 @@ require 'fileutils'
 
 if File.exists?('lib/cilantro.rb')
   require 'lib/cilantro'
+  Cilantro.database_config 'config/linode.yml' if File.exists?('config/linode.yml')
   Cilantro.load_environment(:rake)
 end
 
