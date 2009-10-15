@@ -5,8 +5,14 @@ module Cilantro
   #
   # To generate rich pages, see: <Cilantro::Templater>
   module Controller
+    include Sinatra::Helpers
+
     def self.included(base)
       base.extend ClassMethods
+      
+      def CilantroApplication.scopes
+        @scopes ||= {}
+      end
     end
 
     # Section: Class Methods
@@ -63,6 +69,21 @@ module Cilantro
         CilantroApplication.scopes["#{method} #{path}"] = scope
         CilantroApplication.send(:route, method, path, opts, &bk)
       end
+
+      # Allows a helper method to be defined in the controller class.
+      def helper_method(name, &block)
+        CilantroApplication.send(:define_method, name, &block)
+      end
+
+      # accept reads the HTTP_ACCEPT header.
+      CilantroApplication.send(:define_method, :accepts, Proc.new { @env['HTTP_ACCEPT'].to_s.split(',').map { |a| a.strip.split(';',2)[0] }.reverse })
+      CilantroApplication.send(:define_method, :required_params, Proc.new { |*parms|
+        not_present = parms.inject([]) do |a,(k,v)|
+          a << k unless params.has_key?(k.to_s)
+          a
+        end
+        throw :halt, [400, "Required POST params not present: #{not_present.join(', ')}\n"] unless not_present.empty?
+      })
 
       ########################################################################
       # Method: error(*errors, &block)

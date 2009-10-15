@@ -8,6 +8,11 @@
 # restart that same program as you wish. All you have to give it a
 # directory to run it from, but you'll probably want to give it a port too.
 
+Kernel.trap('INT') {
+  puts "Exiting..."
+  exit
+}
+
 require 'optparse'
 
 def safefork
@@ -172,6 +177,9 @@ def run_app!
     :host => $options[:host],
     :port => $options[:port]
   )
+  at_exit {
+    exec "#{$0} #{ARGV.join(' ')}"
+  }
   Cilantro.app.run!
 end
 

@@ -1,8 +1,12 @@
-# template :index
-# template :index, :layout => :bunnies
-# template.flash "You've won!"
-# template.user = "Jon Doe"
-# return template.to_html
+# get 'foo' do
+#   respond_to 'text/html' do
+#     template.layout = :bunnies
+#     template.flash "You've won!"
+#     template.user = "Jon Doe"
+#     template :index
+#   end
+#   respond_to 'application/json' { {:hello => 'world'}.to_json }
+# end
 module Cilantro
   class Template
     class << self
@@ -50,7 +54,8 @@ module Cilantro
         end
     end
 
-    attr_reader :name, :locals
+    attr_accessor :name
+    attr_reader :locals
 
     def initialize(name, scope, locals={})
       @name = name
@@ -184,6 +189,21 @@ module Cilantro
     end
   end
 
+  class FormatResponder
+    def format_proc=(value)
+      @format_proc = value
+    end
+
+    def to_s
+      @to_s ||= @format_proc.call.to_s
+    end
+    alias :to_str :to_s
+
+    def bytesize
+      to_s.bytesize
+    end
+  end
+
   module Templater
     # Method: layout
     def layout(name)
@@ -191,18 +211,31 @@ module Cilantro
     end
 
     # Method: template
+    # Inputs: optionally, name and locals
+    # Output: a template object, and whenever a name is given, set the name. Default to :default template if none given.
     def template(name=nil, locals={})
-      if name.nil?
-        return @template
-      else
-        raise ArgumentError, "The first time you call `template' you must supply the name of the template to be used!" unless name
-              # caller should probably look as many levels back as necessary to find a method with a space in it.
-        @template = Template.new(name, CilantroApplication.scopes[caller[0].match(/`(.*?)'/)[1]], {:layout => @layout_name}.merge(locals))
-      end
+      @template ||= Template.new(name || :default, CilantroApplication.scopes[caller[0].match(/`(.*?)'/)[1]], {:layout => @layout_name}.merge(locals))
+      @template.name = name if name
       if block_given?
         yield @template
       end
       return @template
+    end
+
+    # Method: respond_to
+    # Inputs: type, &block
+    # Output: The cumulative best chosen format will be returned each time this is called, so
+    #          when called to render, it will run the block associated with that format and
+    #          the result of the block is the response. The content_type header is also set up.
+    def respond_to(type, &block)
+      @respond_to ||= FormatResponder.new
+
+      (@response_formats ||= []) << type
+      preferred_format = accepts.each {|a| break a if @response_formats.include?(a) }
+      content_type preferred_format
+      @respond_to.format_proc = block if type == preferred_format
+
+      @respond_to
     end
   end
 end
