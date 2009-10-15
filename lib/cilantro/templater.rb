@@ -76,6 +76,14 @@ module Cilantro
           content_for_layout
       end
     end
+    def to_json
+      require_with_auto_install 'json'
+      locals.to_json
+    end
+    def to_xml
+      locals.to_xml
+    end
+
     alias :to_str :to_html
     alias :to_s :to_str
     def bytesize

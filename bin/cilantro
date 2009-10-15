@@ -177,6 +177,17 @@ def run_app!
     :host => $options[:host],
     :port => $options[:port]
   )
+
+  # Need to add an EM.watch_dir method, to notice files added, modified, or deleted.
+  #   EM.watch_file("/tmp/foo", Handler)
+  # where Handler is a class that on method_missing simply reloads the app. :)
+  # Do need to think about what to do when reloading the app fails due to error.
+  # Also could implement the EM way to finish outstanding requests before quitting.
+
+  Kernel.trap('HUP') {
+    puts "Restarting..."
+    exit
+  }
   at_exit {
     exec "#{$0} #{ARGV.join(' ')}"
   }

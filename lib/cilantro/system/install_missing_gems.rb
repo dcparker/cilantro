@@ -1,3 +1,15 @@
+module Kernel
+  def require_with_auto_install(name, options={})
+    begin
+      require name
+    rescue LoadError
+      puts `gem install -i gems #{"-v "+options[:version] if options[:version]} #{options[:gem] || name}`
+      Gem.use_paths("#{APP_ROOT}/gems", ["#{APP_ROOT}/gems"])
+      require name
+    end
+  end
+end
+
 gempath = "#{APP_ROOT}/gems"
 if File.exists?(gempath)
   # Redirect standard output to the netherworld
