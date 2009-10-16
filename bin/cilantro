@@ -191,7 +191,14 @@ def run_app!
   at_exit {
     exec "#{$0} #{ARGV.join(' ')}"
   }
-  Cilantro.app.run!
+  begin
+    Cilantro.app.run!
+  rescue RuntimeError => e
+    if e.to_s == 'no acceptor'
+      warn "\n\t*** Can't use port #{$options[:port]}, someone's already there! ***\n"
+      exit!
+    end
+  end
 end
 
 begin
