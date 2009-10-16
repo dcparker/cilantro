@@ -89,6 +89,7 @@ module Cilantro
     def bytesize
       to_html.bytesize
     end
+    alias :size :bytesize
 
     def partial(name, new_locals={})
       if locals.has_key?(:with)
