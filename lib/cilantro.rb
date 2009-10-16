@@ -35,6 +35,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
               :static => true,
               :public => 'public',
               :server => (auto_reload ? 'thin_cilantro_proxy' : 'thin'),
+              :logging => true,
               :raise_errors => (RACK_ENV == :production),
               :show_exceptions => !(RACK_ENV == :production),
               :environment => RACK_ENV
