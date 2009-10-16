@@ -210,7 +210,7 @@ module Cilantro
     def bytesize
       to_s.bytesize
     end
-    alias :size :bytesyze
+    alias :size :bytesize
   end
 
   module Templater
