@@ -40,8 +40,7 @@ module Cilantro
           if s.nil?
             @scope || ''
           else
-            @scope = s.to_s.gsub(/\/+$/,'')
-            @scope = '/' if @scope == ''
+            @scope = ('/'+s.to_s).gsub(/\/+$/,'').gsub(/\/\//, '/')
             # puts "Scope: #{@scope}"
           end
         end
