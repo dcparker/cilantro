@@ -32,7 +32,7 @@ module Cilantro
       # > #  -> action is run, template is found in: /views/people/new.haml
       def scope(s=nil)
         if block_given?
-          old_scope = @scope
+          old_scope = @scope || '/'
           scope(old_scope + s)
           yield
           scope(old_scope)
