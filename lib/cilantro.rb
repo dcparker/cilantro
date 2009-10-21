@@ -14,6 +14,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
         const_set("RACK_ENV", env) if env
         ENV['RACK_ENV'] = RACK_ENV.to_s
 
+        $: << APP_ROOT unless $:.include?(APP_ROOT)
         $: << APP_ROOT+'/lib' unless $:.include?(APP_ROOT+'/lib')
 
         require 'rubygems'
@@ -24,7 +25,7 @@ unless $LOADED_FEATURES.include?('lib/cilantro.rb') or $LOADED_FEATURES.include?
 
         # Beginning with RACK_ENV, we determine which pieces of the app's environment need to be loaded.
           # If in development or production mode, we need to load up Sinatra:
-          puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{RACK_ENV.inspect}"
+          puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{RACK_ENV.inspect}" unless RACK_ENV == :test
           if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
             require File.dirname(__FILE__)+'/cilantro/auto_reload' if auto_reload
             require 'cilantro/sinatra'

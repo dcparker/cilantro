@@ -1,5 +1,5 @@
 ENV['RACK_ENV'] = 'test'
-require 'lib/cilantro'
+require File.dirname(__FILE__)+'/../lib/cilantro'
 Cilantro.load_environment
 
 require_with_auto_install 'spec', :gem => 'rspec'
