@@ -46,6 +46,7 @@ module Cilantro
           end
         end
       end
+      alias :path :scope
 
       # These were pulled right from sinatra/base.rb
 
