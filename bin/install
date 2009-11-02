@@ -28,10 +28,10 @@ open("#{ENV['HOME']}/.bin/cilantro", 'w') do |f|
 f << <<-END_PROXY_FILE
 #!/usr/bin/env ruby
 if File.exists?('bin/cilantro')
-  exec "bin/cilantro #{ARGV.join(' ')}"
+  exec "bin/cilantro \#{ARGV.join(' ')}"
 else
   puts "This project does not have a bin/cilantro installed!"
-  exec "/usr/local/bin/cilantro #{ARGV.join(' ')}" if File.exists?('/usr/local/bin/cilantro')
+  exec "/usr/local/bin/cilantro \#{ARGV.join(' ')}" if File.exists?('/usr/local/bin/cilantro')
 end
 END_PROXY_FILE
 end
