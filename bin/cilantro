@@ -52,8 +52,8 @@ end
 def report_error(e)
   # Make the magic happen!
   # (jabber me when there's an error loading an app)
-  if File.exists?('config/cilantro.yml')
-    jabber = YAML.load_file('config/cilantro.yml') || {}
+  if File.exists?("config/#{ENV['RACK_ENV']}.yml")
+    jabber = YAML.load_file("config/#{ENV['RACK_ENV']}.yml") || {}
     if jabber[:notify]
       begin
         require 'rubygems'
@@ -143,13 +143,13 @@ require 'yaml'
 $config = case
 when $options[:config]
   YAML.load_file($options[:config])
-when File.exists?("#{directory}/config/cilantro.yml")
-  YAML.load_file("#{directory}/config/cilantro.yml")
+when File.exists?("#{directory}/config/#{ENV['RACK_ENV']}.yml")
+  YAML.load_file("#{directory}/config/#{ENV['RACK_ENV']}.yml")
 else
   {}
 end || {}
 
-if ($options[:config] || (!$options[:specified_port] && File.exists?("#{directory}/config/cilantro.yml"))) && action =~ /start/
+if ($options[:config] || (!$options[:specified_port] && File.exists?("#{directory}/config/#{ENV['RACK_ENV']}.yml"))) && action =~ /start/
   if $config.is_a?(Hash)
     $options[:host] = $config[:host] if $config.has_key?(:host) && !$options[:specified_host]
     ports = $config[:ports] || []
@@ -166,7 +166,7 @@ end
 Dir.chdir(directory) if File.directory?(directory)
 write_dir = File.directory?('log') ? 'log' : 'config'
 
-RACK_ENV = (ENV['RACK_ENV'] = ($config[:environment] || 'development').to_s).to_sym
+RACK_ENV = (ENV['RACK_ENV'] ||= ($config[:environment] || 'development').to_s).to_sym
 
 def run_app!
   require 'lib/cilantro'

@@ -1,5 +1,5 @@
 class Listings < Application
-  scope :listings
+  path :listings
 
   get do
     template :index, :listings => Listing.all
