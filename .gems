@@ -1,0 +1,6 @@
+daemons --version '1.0.10'
+eventmachine --version '0.12.8'
+haml --version '2.2.4'
+rack --version '1.0.0'
+sinatra --version '0.9.4'
+thin --version '1.2.4'
