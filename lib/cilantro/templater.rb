@@ -8,7 +8,7 @@
 #   respond_to 'application/json' { {:hello => 'world'}.to_json }
 # end
 module Cilantro
-  class Template
+  class Template < String
     class << self
       def options
         @options ||= {
@@ -57,10 +57,14 @@ module Cilantro
     attr_accessor :name
     attr_reader :locals
 
-    def initialize(name, scope, locals={})
+    def initialize(name, locals={})
       @name = name
-      @scope = scope
       @locals = locals
+    end
+
+    def set_scope(scope)
+      @controller = scope[0]
+      @scope = scope[1]
       @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout], @scope)
       # load view helpers
       if template_helper = Template.get_template(@name, @scope, 'rb')
@@ -75,6 +79,8 @@ module Cilantro
           @layout.render!(content_for_layout) :
           content_for_layout
       end
+      replace @html
+      @html
     end
     def to_json
       require_with_auto_install 'json'
@@ -84,12 +90,18 @@ module Cilantro
       locals.to_xml
     end
 
+    # These are to make Cilantro Templates work with Sinatra and Rack.
     alias :to_str :to_html
     alias :to_s :to_str
     def bytesize
       to_html.bytesize
     end
     alias :size :bytesize
+    def instance_of?(klass)
+      return true if klass == String
+      super
+    end
+    # ****
 
     def partial(name, new_locals={})
       if locals.has_key?(:with)
@@ -224,8 +236,10 @@ module Cilantro
     # Inputs: optionally, name and locals
     # Output: a template object, and whenever a name is given, set the name. Default to :default template if none given.
     def template(name=nil, locals={})
-      @template ||= Template.new(name || :default, CilantroApplication.scopes[caller[0].match(/`(.*?)'/)[1]], {:layout => @layout_name}.merge(locals))
+      @template ||= Template.new(name || :default, {:layout => @layout_name}.merge(locals))
       @template.name = name if name
+      # Set the scope into the template as soon as we seem to be inside of the action code.
+      @template.set_scope(self.class.scopes[caller[0].match(/`(.*?)'/)[1]]) if caller[0] =~ /[A-Z]+ /
       if block_given?
         yield @template
       end
@@ -250,4 +264,4 @@ module Cilantro
   end
 end
 
-CilantroApplication.send(:include, Cilantro::Templater) if ::Object.const_defined?(:CilantroApplication)
+Application.send(:include, Cilantro::Templater) if ::Object.const_defined?(:Application)

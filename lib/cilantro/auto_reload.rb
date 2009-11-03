@@ -10,7 +10,7 @@ module Cilantro
     attr_writer :app
     def initialize
       @monitor = FileMonitor.new
-      @app = Rack::Chunked.new(Rack::ContentLength.new(CilantroApplication.new))
+      @app = Rack::Chunked.new(Rack::ContentLength.new(Application.new))
       @monitor.add(APP_ROOT) do |file|
         @something_changed = true
       end
@@ -25,7 +25,7 @@ module Cilantro
         # Reload the environment
         Cilantro.reload_environment
         # Remake the app instance that will be used for the request
-        @app = Rack::Chunked.new(Rack::ContentLength.new(CilantroApplication.new))
+        @app = Rack::Chunked.new(Rack::ContentLength.new(Application.new))
         @something_changed = false
       end
       @app
