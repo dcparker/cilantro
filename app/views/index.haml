@@ -1,10 +1,10 @@
 #header.span-24
-  %h1 Cilantro
-  %p.subtext Changing the world, one app at a time.
+  %h1 Twitter!
 #content
-  %p Hello World!
-  - if msg
-    %p== Secret message: <b>#{msg}</b>.
-  - if name
-    %p== You entered '#{name}'.
-  = partial :form, :name => name
+  %p
+    See existing
+    %a{:href => url(:posts)} updates
+  %form{:action => '/posts', :method => 'POST'}
+    %input{:type => 'text', :name => 'post[update]'}
+    %p
+      %input{:type => 'submit'}

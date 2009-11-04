@@ -22,7 +22,9 @@ require 'cilantro/templater'
 ###################
 # Section: Database Setup
 # Fires up a connection to the database using settings from config/database.yml config
-# require 'dm-core'
-# require 'dm-validations'
-# require 'dm-migrations'
-# Cilantro.setup_database
+require_with_auto_install 'dm-core'
+require_with_auto_install 'data_objects'
+require_with_auto_install 'dm-types'
+require_with_auto_install 'dm-migrations'
+# require_with_auto_install 'dm-validations'
+Cilantro.setup_database

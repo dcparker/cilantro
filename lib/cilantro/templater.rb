@@ -9,6 +9,7 @@
 # end
 module Cilantro
   class Template < String
+    include Cilantro::Application
     class << self
       def options
         @options ||= {
@@ -57,13 +58,13 @@ module Cilantro
     attr_accessor :name
     attr_reader :locals
 
-    def initialize(name, locals={})
+    def initialize(controller, name, locals={})
+      @controller = controller
       @name = name
       @locals = locals
     end
 
     def set_scope(scope)
-      @controller = scope[0]
       @scope = scope[1]
       @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout], @scope)
       # load view helpers
@@ -72,8 +73,14 @@ module Cilantro
       end
     end
 
+    def url(*args)
+      @controller.url(*args)
+    end
+
     def to_html
       @html ||= begin
+        @html = :rendering
+        replace @name.inspect + ' in ' + @scope
         content_for_layout = render(Template.get_template(@name, @scope), self, locals)
         @layout ?
           @layout.render!(content_for_layout) :
@@ -159,7 +166,8 @@ module Cilantro
       @locals[name.to_sym]
     end
 
-    def method_missing(name, value=nil)
+    def method_missing(name, value=nil, *args)
+      raise NoMethodError, "no variable or method `#{name}' for template #{self}", caller if @html == :rendering
       sign = if name.to_s =~ /^(.*)([\=\?])$/
         name = $1.to_sym
         $2
@@ -236,7 +244,7 @@ module Cilantro
     # Inputs: optionally, name and locals
     # Output: a template object, and whenever a name is given, set the name. Default to :default template if none given.
     def template(name=nil, locals={})
-      @template ||= Template.new(name || :default, {:layout => @layout_name}.merge(locals))
+      @template ||= Template.new(self, name || :default, {:layout => @layout_name}.merge(locals))
       @template.name = name if name
       # Set the scope into the template as soon as we seem to be inside of the action code.
       @template.set_scope(self.class.scopes[caller[0].match(/`(.*?)'/)[1]]) if caller[0] =~ /[A-Z]+ /

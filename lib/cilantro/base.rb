@@ -318,25 +318,29 @@ module Cilantro
     # non-named parenthesis sections as well, and there are no other regexp special
     # characters present.
     def url(name, *args)
-      options = args.last.is_a?(Hash) ? args.pop : {}
+      options = args.last.is_a?(String) || args.last.is_a?(Numeric) ? nil : args.pop
       match, needs = self.class.route_names[name.to_sym]
-      puts "Match: #{match}\n#{match.source}\nNeeds: #{needs}"
+      needs = needs.dup
       match = match.source.sub(/^\^/,'').sub(/\$$/,'')
       while match.gsub!(/\([^()]+\)/) { |m|
-          puts "M: #{m}"
+          # puts "M: #{m}"
           if m == '([^/?&#]+)'
             key = needs.shift
+            # puts "Needs: #{key}"
             if options.is_a?(Hash)
+              # puts "Hash value"
               options[key.to_sym] || options[key.to_s] || args.shift
             else
               if options.respond_to?(key)
+                # puts "Getting value from object"
                 options.send(key)
               else
+                # puts "Shifting value"
                 args.shift
               end
             end
           elsif m =~ /^\(\?[^\:]*\:(.*)\)$/
-            puts "matched #{m}"
+            # puts "matched #{m}"
             m.match(/^\(\?[^\:]*\:(.*)\)$/)[1]
           else
             raise "Could not generate route :#{name} for #{options.inspect}: need #{args.join(', ')}." if args.empty?
