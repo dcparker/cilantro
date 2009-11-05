@@ -133,15 +133,6 @@ module Cilantro
   module Controller
     # include Sinatra::Helpers
 
-    def self.extended(base)
-      class << base
-        def method_added(method_name)
-          puts "#{method_name} added to #{self}:"
-          # m = instance_method(method_name)
-        end
-      end
-    end
-
     attr_reader :application
     
     ########################################################################
