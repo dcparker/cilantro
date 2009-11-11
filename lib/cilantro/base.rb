@@ -238,7 +238,7 @@ module Cilantro
     private
       def route(method, in_path, opts, &bk)
         if in_path.is_a?(Hash)
-          in_path.inject([]) do |rts,(name,path)|
+          return in_path.inject([]) do |rts,(name,path)|
             path = path_with_scope(path)
             # puts "Route: #{method} #{path[0]}"
             # Save the scope with this route
@@ -251,6 +251,18 @@ module Cilantro
             # puts "\tnamed :#{name}  -- #{rt[0]}"
             rts << rt
           end
+        elsif in_path.is_a?(Symbol)
+          path = path_with_scope('')
+          # puts "Route: #{method} #{path[0]}"
+          # Save the scope with this route
+          application.scopes["#{method} #{path[0]}"] = [self, scope]
+          # Register the path with Sinatra's routing engine
+          rt = application.send(method.downcase, path[0], opts, &bk)
+          rt[1].replace(path[1])
+          # Link up the name to the compiled route regexp
+          application.route_names[in_path] = [rt[0], rt[1]]
+          # puts "\tnamed :#{in_path}  -- #{rt[0]}"
+          return rt
         else
           path = path_with_scope(in_path)
           # puts "Route: #{method} #{path[0]}"
