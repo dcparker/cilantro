@@ -324,6 +324,7 @@ module Cilantro
     def url(name, *args)
       options = args.last.is_a?(String) || args.last.is_a?(Numeric) ? nil : args.pop
       match, needs = self.class.route_names[name.to_sym]
+      raise RuntimeError, "Can't seem to find named route #{name.inspect}!", caller if match.nil? && needs.nil?
       needs = needs.dup
       match = match.source.sub(/^\^/,'').sub(/\$$/,'')
       while match.gsub!(/\([^()]+\)/) { |m|

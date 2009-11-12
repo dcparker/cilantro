@@ -67,7 +67,11 @@ module Cilantro
     end
 
     def url(*args)
-      @controller.url(*args)
+      begin
+        @controller.url(*args)
+      rescue => e
+        raise RuntimeError, e.to_s, caller
+      end
     end
 
     def to_html
