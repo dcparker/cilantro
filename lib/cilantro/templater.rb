@@ -18,8 +18,8 @@ module Cilantro
         }
       end
 
-      def get_template(name, scope='/', ext=nil)
-        view_paths(scope).each do |vp|
+      def get_template(name, namespace='/', ext=nil)
+        view_paths(namespace).each do |vp|
           if file = Dir.glob(File.join([vp, "#{name}.#{ext ? ext : '*'}"]))[0]
             return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
           end
@@ -27,8 +27,8 @@ module Cilantro
         nil
       end
       
-      def get_partial(name, scope='/', ext=nil)
-        view_paths(scope).each do |vp|
+      def get_partial(name, namespace='/', ext=nil)
+        view_paths(namespace).each do |vp|
           if file = Dir.glob(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext ? ext : '*'}"]))[0]
             return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
           end
@@ -45,8 +45,8 @@ module Cilantro
       end
 
       private
-        def view_paths(scope)
-          paths = scope.split('/').reject {|j| j==''}
+        def view_paths(namespace)
+          paths = namespace.split('/').reject {|j| j==''}
           view_paths = ["#{APP_ROOT}/app/views"]
           paths.each do |l|
             view_paths.unshift(view_paths.first + '/' + l)
@@ -64,11 +64,11 @@ module Cilantro
       @locals = locals
     end
 
-    def set_scope(scope)
-      @scope = scope[1]
-      @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout], @scope)
+    def set_namespace(namespace)
+      @namespace = namespace[1]
+      @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout], @namespace)
       # load view helpers
-      if template_helper = Template.get_template(@name, @scope, 'rb')
+      if template_helper = Template.get_template(@name, @namespace, 'rb')
         instance_eval(template_helper.last)
       end
     end
@@ -80,8 +80,8 @@ module Cilantro
     def to_html
       @html ||= begin
         @html = :rendering
-        replace @name.inspect + ' in ' + @scope
-        content_for_layout = render(Template.get_template(@name, @scope), self, locals)
+        replace @name.inspect + ' in ' + @namespace
+        content_for_layout = render(Template.get_template(@name, @namespace), self, locals)
         @layout ?
           @layout.render!(content_for_layout) :
           content_for_layout
@@ -117,13 +117,13 @@ module Cilantro
         # Catch locals set by the partial helper.
         old_locals = @locals
         @locals = {}
-        if partial_helper = Template.get_partial(name, @scope, 'rb')
+        if partial_helper = Template.get_partial(name, @namespace, 'rb')
           instance_eval(partial_helper.last)
         end
         new_locals.merge!(@locals)
         @locals = old_locals
 
-        render(Template.get_partial(name, @scope), self, new_locals)
+        render(Template.get_partial(name, @namespace), self, new_locals)
       end
     end
 
@@ -139,7 +139,7 @@ module Cilantro
       # Catch things defined by the partial's helper.
       old_locals = @locals
       @locals = {}
-      if partial_helper = Template.get_partial(name, @scope, 'rb')
+      if partial_helper = Template.get_partial(name, @namespace, 'rb')
         instance_eval(partial_helper.last)
       end
       new_locals.merge!(@locals)
@@ -147,10 +147,10 @@ module Cilantro
 
       if looper && looper_name
         looper.collect do |single|
-          render(Template.get_partial(name, @scope), self, new_locals.merge(looper_name => single))
+          render(Template.get_partial(name, @namespace), self, new_locals.merge(looper_name => single))
         end.join
       else
-        render(Template.get_partial(name, @scope), self, new_locals)
+        render(Template.get_partial(name, @namespace), self, new_locals)
       end
     end
 
@@ -202,10 +202,10 @@ module Cilantro
       end
     end
 
-    def initialize(name, scope='/')
+    def initialize(name, namespace='/')
       @name = name
       @locals = {}
-      @scope = scope
+      @namespace = namespace
       # load template helper if present
       if layout_helper = Layout.get_layout(@name, 'rb')
         instance_eval(layout_helper.last)
@@ -246,8 +246,8 @@ module Cilantro
     def template(name=nil, locals={})
       @template ||= Template.new(self, name || :default, {:layout => @layout_name}.merge(locals))
       @template.name = name if name
-      # Set the scope into the template as soon as we seem to be inside of the action code.
-      @template.set_scope(self.class.scopes[caller[0].match(/`(.*?)'/)[1]]) if caller[0] =~ /[A-Z]+ /
+      # Set the namespace into the template as soon as we seem to be inside of the action code.
+      @template.set_namespace(self.class.namespaces[caller[0].match(/`(.*?)'/)[1]]) if caller[0] =~ /[A-Z]+ /
       if block_given?
         yield @template
       end

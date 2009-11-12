@@ -1,5 +1,4 @@
-%h1
-  %a{:href => url(:home)}== #{posts.length} Posts:
+%h1== #{posts.length} Posts:
 - posts.each do |post|
   %p
-    %a{:href => url(:post, post)}= post.update
+    %a{:href => url(:post, post)}= post.title

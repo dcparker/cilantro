@@ -22,6 +22,8 @@ require 'cilantro/templater'
 ###################
 # Section: Database Setup
 # Fires up a connection to the database using settings from config/database.yml config
+require_with_auto_install 'sqlite3', :gem => 'sqlite3-ruby'
+require_with_auto_install 'do_sqlite3'
 require_with_auto_install 'dm-core'
 require_with_auto_install 'data_objects'
 require_with_auto_install 'dm-types'

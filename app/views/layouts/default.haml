@@ -2,7 +2,7 @@
 %html{:xmlns => 'http://www.w3.org/1999/xhtml', 'xml:lang' => 'en', :lang => 'en'}
   %head
     %meta{'http-equiv' => 'Content-Type', :content => 'text/html; charset=utf-8'}
-    %title Cilantro
+    %title Bloggy!
     %link{:rel => 'stylesheet', :href => '/stylesheets/blueprint/screen.css', :type => 'text/css', :media => 'screen, projection'}
     == <!--[if IE]><link rel="stylesheet" href="/stylesheets/blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
     %link{:rel => 'stylesheet', :href => '/stylesheets/site.css', :type => 'text/css', :media => 'screen', :title => 'no title', :charset => 'utf-8'}
@@ -10,4 +10,8 @@
     %script{:type => 'text/javascript', :charset => 'utf-8', :src => '/javascripts/jquery.edit_in_place.js'}
     %script{:type => 'text/javascript', :charset => 'utf-8', :src => '/javascripts/site.js'}
   %body
-    .container= content_for_layout
+    #header
+      %h1
+        %a{:href => '/'} Bloggy!
+    #content
+      .container= content_for_layout

@@ -136,47 +136,48 @@ module Cilantro
     attr_reader :application
     
     ########################################################################
-    # Method: scope(string)
-    # Define scope for the next routes. The scope will be prepended to routes.
-    # The scope is also saved for each route and used to find views for that
+    # Method: namespace(string)
+    # Define namespace for the next routes. The namespace will be prepended to routes.
+    # The namespace is also saved for each route and used to find views for that
     # route.
     #
     # Example: 
-    # > scope = '/people'
+    # > namespace = '/people'
     # > get 'new' do 
     # >   template :new
     # > end
     # > # GET /people/new
     # > #  -> action is run, template is found in: /views/people/new.haml
-    def scope(new_scope=nil,name=nil,&block)
-      raise ArgumentError, "Scope must be a string, a symbol, or a hash with string values." if !new_scope.nil? && !(new_scope.is_a?(String) || new_scope.is_a?(Symbol) || new_scope.is_a?(Hash))
-      @scope ||= '/'
-      if new_scope.is_a?(Hash)
-        new_scope.each do |name,new_scope|
-          block_given? ? scope(new_scope,name) { block.call } : scope(new_scope,name)
+    def namespace(new_namespace=nil,name=nil,&block)
+      raise ArgumentError, "Scope must be a string, a symbol, or a hash with string values." if !new_namespace.nil? && !(new_namespace.is_a?(String) || new_namespace.is_a?(Symbol) || new_namespace.is_a?(Hash))
+      @namespace ||= '/'
+      if new_namespace.is_a?(Hash)
+        new_namespace.each do |name,new_namespace|
+          block_given? ? namespace(new_namespace,name) { block.call } : namespace(new_namespace,name)
         end
       else
-        # Here we have just one scope and *possibly* a name to save for the first route registered with this scope.
-        # Sanitize new scope to NOT end with a slash OR begin with a slash.
-        @next_route_name = new_scope if new_scope.is_a?(Symbol)
-        new_scope = new_scope.to_s.gsub(/(^\/|\/$)/,'') if new_scope
+        # Here we have just one namespace and *possibly* a name to save for the first route registered with this namespace.
+        # Sanitize new namespace to NOT end with a slash OR begin with a slash.
+        @next_route_name = new_namespace if new_namespace.is_a?(Symbol)
+        new_namespace = new_namespace.to_s.gsub(/(^\/|\/$)/,'') if new_namespace
         @next_route_name = name if name
-        # Join scope to previous scope by a slash.
+        # Join namespace to previous namespace by a slash.
         if block_given?
-          old_scope = @scope
-          @scope = @scope.gsub(/\/$/,'')+'/'+new_scope
+          old_namespace = @namespace
+          @namespace = @namespace.gsub(/\/$/,'')+'/'+new_namespace
           yield
-          @scope = old_scope
+          @namespace = old_namespace
         else
-          if new_scope.nil?
-            @scope
+          if new_namespace.nil?
+            @namespace
           else
-            @scope = @scope.gsub(/\/$/,'')+'/'+new_scope
+            @namespace = @namespace.gsub(/\/$/,'')+'/'+new_namespace
           end
         end
       end
     end
-    alias :path :scope
+    alias :scope :namespace
+    alias :path :namespace
 
     def get(path='', opts={}, &bk);    route 'GET',    path, opts, &bk end
     def put(path='', opts={}, &bk);    route 'PUT',    path, opts, &bk end
@@ -223,7 +224,7 @@ module Cilantro
       # new_block = lambda {
       #   block.call
       # }
-      # application.scoped_filters << [scope, block]
+      # application.namespaced_filters << [namespace, block]
     end
 
     def before(&block)
@@ -239,10 +240,10 @@ module Cilantro
       def route(method, in_path, opts, &bk)
         if in_path.is_a?(Hash)
           return in_path.inject([]) do |rts,(name,path)|
-            path = path_with_scope(path)
+            path = path_with_namespace(path)
             # puts "Route: #{method} #{path[0]}"
-            # Save the scope with this route
-            application.scopes["#{method} #{path[0]}"] = [self, scope]
+            # Save the namespace with this route
+            application.namespaces["#{method} #{path[0]}"] = [self, namespace]
             # Register the path with Sinatra's routing engine
             rt = application.send(method.downcase, path[0], opts, &bk)
             rt[1].replace(path[1])
@@ -252,10 +253,10 @@ module Cilantro
             rts << rt
           end
         elsif in_path.is_a?(Symbol)
-          path = path_with_scope('')
+          path = path_with_namespace('')
           # puts "Route: #{method} #{path[0]}"
-          # Save the scope with this route
-          application.scopes["#{method} #{path[0]}"] = [self, scope]
+          # Save the namespace with this route
+          application.namespaces["#{method} #{path[0]}"] = [self, namespace]
           # Register the path with Sinatra's routing engine
           rt = application.send(method.downcase, path[0], opts, &bk)
           rt[1].replace(path[1])
@@ -264,10 +265,10 @@ module Cilantro
           # puts "\tnamed :#{in_path}  -- #{rt[0]}"
           return rt
         else
-          path = path_with_scope(in_path)
+          path = path_with_namespace(in_path)
           # puts "Route: #{method} #{path[0]}"
-          # Save the scope with this route
-          application.scopes["#{method} #{path[0]}"] = [self, scope]
+          # Save the namespace with this route
+          application.namespaces["#{method} #{path[0]}"] = [self, namespace]
           # Register the path with Sinatra's routing engine
           rt = application.send(method.downcase, path[0], opts, &bk)
           rt[1].replace(path[1])
@@ -281,19 +282,19 @@ module Cilantro
         end
       end
 
-      def path_with_scope(path)
+      def path_with_namespace(path)
         if path.is_a?(Regexp)
           # Scope should be already sanitized to NOT end with a slash.
           # Path should NOT be sanitized since it's a Regexp.
           # Scope + Path should be joined with a slash IF the path regexp does not begin with a '.'
-          scrx, needs = application.send(:compile, scope)
+          scrx, needs = application.send(:compile, namespace)
           [Regexp.new(scrx.source.sub(/^\^/,'').sub(/\$$/,'') + path.source.sub(/^\^/,'').sub(/\$$/,'')), needs]
         else
           # Scope should be already sanitized to NOT end with a slash.
           # Path should be sanitized to NOT begin with a slash, and OPTIONALLY end with a slash.
           # Scope + Path should be joined with a slash IF the path string does not begin with a '.'
-          # (scope + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
-          application.send(:compile, scope + path.gsub(/^\//,''))
+          # (namespace + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
+          application.send(:compile, namespace + path.gsub(/^\//,''))
         end
       end
   end
@@ -354,28 +355,28 @@ module Cilantro
       match.gsub(/\\(.)/,'\\1') # unescapes escaped characters
     end
 
-    def scope
+    def namespace
       (0..caller.length).each do |i|
         next unless caller[i] =~ /[A-Z]+ /
-        @scope = self.class.scopes[caller[i].match(/`(.*?)'/)[1]]
-      end unless @scope
-      @scope[1] if @scope
+        @namespace = self.class.namespaces[caller[i].match(/`(.*?)'/)[1]]
+      end unless @namespace
+      @namespace[1] if @namespace
     end
 
     def controller
-      scope
-      @scope[0] if @scope
+      namespace
+      @namespace[0] if @namespace
     end
 
     module ClassMethods
-      def scopes
-        @scopes ||= {}
+      def namespaces
+        @namespaces ||= {}
       end
       def route_names
         @route_names ||= {}
       end
-      def scoped_filters
-        @scoped_filters ||= []
+      def namespaced_filters
+        @namespaced_filters ||= []
       end
 
       def inherited(base)

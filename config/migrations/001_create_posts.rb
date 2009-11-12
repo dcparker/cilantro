@@ -1,16 +1,17 @@
 require 'dm-types'
 include DataMapper::Types
 
-migration 1, :create_listings do
+migration 1, :create_posts do
   up do
     create_table :posts do
       column :id, Serial
-      column :update, String
+      column :title, String
+      column :body, Text
       column :created_at, DateTime
     end
   end
 
   down do
-    drop_table :listings
+    drop_table :posts
   end
 end
