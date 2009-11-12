@@ -60,7 +60,9 @@ module Cilantro
       @layout = Layout.new(@controller, locals.delete(:layout) || self.class.options[:default_layout], @namespace)
       # load view helpers
       if template_helper = Template.get_template(@name, @namespace, 'rb')
+        @html = :helper
         instance_eval(template_helper.last)
+        @html = :rendering
       end
     end
 
@@ -109,7 +111,9 @@ module Cilantro
         old_locals = @locals
         @locals = {}
         if partial_helper = Template.get_partial(name, @namespace, 'rb')
+          @html = :helper
           instance_eval(partial_helper.last)
+          @html = :rendering
         end
         new_locals.merge!(@locals)
         @locals = old_locals
@@ -131,7 +135,9 @@ module Cilantro
       old_locals = @locals
       @locals = {}
       if partial_helper = Template.get_partial(name, @namespace, 'rb')
+        @html = :helper
         instance_eval(partial_helper.last)
+        @html = :rendering
       end
       new_locals.merge!(@locals)
       @locals = old_locals
@@ -158,7 +164,6 @@ module Cilantro
     end
 
     def method_missing(name, value=nil, *args)
-      raise NoMethodError, "no variable or method `#{name}' for template #{self}", caller if @html == :rendering
       sign = if name.to_s =~ /^(.*)([\=\?])$/
         name = $1.to_sym
         $2
@@ -166,11 +171,11 @@ module Cilantro
         ''
       end
 
-      case sign
-      when '='
+      return @locals.has_key?(name) || @locals.has_key?(:"unrendered_#{name}") if sign == '?'
+      raise NoMethodError, "no variable or method `#{name}' for template #{self}", caller if @html == :rendering
+
+      if sign == '='
         @locals[name] = value
-      when '?'
-        return @locals.has_key?(name) || @locals.has_key?(:"unrendered_#{name}")
       else
         if value
           @locals[name] = value
@@ -200,7 +205,9 @@ module Cilantro
       @namespace = namespace
       # load template helper if present
       if layout_helper = Layout.get_layout(@name, 'rb')
+        @html = :helper
         instance_eval(layout_helper.last)
+        @html = :rendering
       end
       @layout = Layout.get_layout(@name)
     end
