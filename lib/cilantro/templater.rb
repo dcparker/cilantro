@@ -1,12 +1,3 @@
-# get 'foo' do
-#   respond_to 'text/html' do
-#     template.layout = :bunnies
-#     template.flash "You've won!"
-#     template.user = "Jon Doe"
-#     template :index
-#   end
-#   respond_to 'application/json' { {:hello => 'world'}.to_json }
-# end
 module Cilantro
   class Template < String
     include Cilantro::Application
@@ -66,7 +57,7 @@ module Cilantro
 
     def set_namespace(namespace)
       @namespace = namespace[1]
-      @layout = Layout.new(locals.delete(:layout) || self.class.options[:default_layout], @namespace)
+      @layout = Layout.new(@controller, locals.delete(:layout) || self.class.options[:default_layout], @namespace)
       # load view helpers
       if template_helper = Template.get_template(@name, @namespace, 'rb')
         instance_eval(template_helper.last)
@@ -202,7 +193,8 @@ module Cilantro
       end
     end
 
-    def initialize(name, namespace='/')
+    def initialize(controller, name, namespace='/')
+      @controller = controller
       @name = name
       @locals = {}
       @namespace = namespace
