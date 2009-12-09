@@ -52,12 +52,12 @@ module Cilantro
     def initialize(controller, name, locals={})
       @controller = controller
       @name = name
-      @locals = locals
+      @locals = {:layout => self.class.options[:default_layout]}.merge(locals)
     end
 
     def set_namespace(namespace)
       @namespace = namespace[1]
-      @layout = Layout.new(@controller, locals.delete(:layout) || self.class.options[:default_layout], @namespace)
+      @layout = Layout.new(@controller, locals.delete(:layout), @namespace) if locals[:layout]
       # load view helpers
       if template_helper = Template.get_template(@name, @namespace, 'rb')
         @html = :helper
@@ -259,7 +259,8 @@ module Cilantro
     # Inputs: optionally, name and locals
     # Output: a template object, and whenever a name is given, set the name. Default to :default template if none given.
     def template(name=nil, locals={})
-      @template ||= Template.new(self, name || :default, {:layout => @layout_name}.merge(locals))
+      locals = {:layout => @layout_name}.merge(locals) if @layout_name
+      @template ||= Template.new(self, name || :default, locals)
       @template.name = name if name
       # Set the namespace into the template as soon as we seem to be inside of the action code.
       @template.set_namespace(self.class.namespaces[caller[0].match(/`(.*?)'/)[1]]) if caller[0] =~ /[A-Z]+ /
