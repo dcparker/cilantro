@@ -22,7 +22,7 @@ module Cilantro
             gem_def << " --version '#{options[:version]}'" if options[:version]
             f << gem_def << "\n"
           end
-        end
+        end if File.writable?('.gems')
       end
     end
 
@@ -80,8 +80,8 @@ end
 # 1. Sandbox Rubygems
 APP_ROOT = File.expand_path(Dir.pwd) unless defined?(APP_ROOT)
 
-if File.directory?("#{APP_ROOT}/gems") && File.writable?("#{APP_ROOT}/gems")
+if File.directory?("#{APP_ROOT}/gems")
   # Oh but first, go ahead and install any missing gems (PLEASE, only include gems/specifications and gems/cache in your git repo)
-    Cilantro.install_missing_gems
+    Cilantro.install_missing_gems if File.writable?("#{APP_ROOT}/gems")
   Gem.use_paths("#{APP_ROOT}/gems", ["#{APP_ROOT}/gems"])
 end

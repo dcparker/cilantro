@@ -18,7 +18,7 @@ module Cilantro
         # If in development or production mode, we need to load up Sinatra:
         puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{RACK_ENV.inspect}" unless RACK_ENV == :test
         if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
-          require File.dirname(__FILE__)+'/cilantro/auto_reload' if auto_reload
+          require 'cilantro/auto_reload' if auto_reload
           require 'cilantro/sinatra'
           # @base_constants = ::Object.constants - ['Application']
           # @base_required = $LOADED_FEATURES.dup - ['cilantro/sinatra.rb']
