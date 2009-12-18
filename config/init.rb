@@ -21,16 +21,17 @@ require 'cilantro/templater'
 
 ###################
 # Section: Database Setup
-dependency 'dm-core'
-dependency 'data_objects'
-dependency 'dm-types'
-dependency 'dm-migrations'
+# dependency 'dm-core'
+# dependency 'data_objects'
+# dependency 'dm-types'
+# dependency 'dm-migrations'
 # dependency 'dm-validations'
 
-dependency 'sqlite3', :gem => 'sqlite3-ruby', :env => :development
+# dependency 'sqlite3', :gem => 'sqlite3-ruby', :env => :development
 
-dependency 'do_sqlite3', :env => :development
-dependency 'do_postgres', :env => :production
+# dependency 'do_sqlite3', :env => :development
+# dependency 'do_postgres', :env => :production
 
-# Fires up a connection to the database using settings from config/database.yml config
-Cilantro.setup_database
+# Uncomment this to fire up a connection to the database using settings from config/database.yml config
+# It's configured for DataMapper by default, you can set up your own connection routine here instead.
+# Cilantro.setup_database
