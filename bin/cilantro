@@ -336,9 +336,14 @@ begin
       system "git clone git://github.com/dcparker/cilantro.git .cgit.foobar"
       system "rm -rf .cgit.foobar"
     end
-    system "git stash save"
-    system "git pull origin cilantro"
-    system "git stash pop"
+    last_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
+    deliberate_diff = `git diff #{last_commit}`
+    `git reset --hard #{last_commit}`
+    `git pull origin cilantro`
+    `git reset --hard cilantro`
+    p = IO.popen("patch --batch --verbose -p1", 'w')
+    p.puts deliberate_diff
+    p.close
   when 'git'
     unless ENV['GIT_DIR'] == "#{ENV['HOME']}/.cilantro.git"
       ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
