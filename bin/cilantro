@@ -349,8 +349,8 @@ begin
     `git pull origin cilantro`
     `git reset --hard cilantro`
       # Save the latest cilantro version that we're working from here.
-      ENV['GIT_DIR'] = ".git"
       last_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
+      ENV['GIT_DIR'] = ".git"
       `git config cilantro.version #{last_commit}`
     p = IO.popen("patch --batch --verbose -p1", 'w')
     p.puts deliberate_diff
