@@ -99,6 +99,10 @@ optparse = OptionParser.new do |opts|
     $options[:specified_port] = true
   end
 
+  opts.on( '-e', '--environment ENV', "Set the environment manually (defaults to RACK_ENV or development)") do |env|
+    ENV['RACK_ENV'] = env
+  end
+
   $options[:config] = nil
   opts.on( '-c', '--config CONFIG', "Use config file CONFIG" ) do |conf|
     raise if !File.exists?(conf)
@@ -333,16 +337,21 @@ begin
     puts "Whenever the cilantro project is updated, you can keep up to date by running 'cilantro update'"
     exec "mate ." if `which mate`
   when 'update'
+    last_commit = `git config cilantro.version`.chomp
     ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
+    last_commit ||= `git log -n1`.split(/\n/)[0].split(/\s/)[1]
     unless File.directory?("#{ENV['HOME']}/.cilantro.git")
       system "git clone git://github.com/dcparker/cilantro.git .cgit.foobar"
       system "rm -rf .cgit.foobar"
     end
-    last_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
     deliberate_diff = `git diff #{last_commit}`
     `git reset --hard #{last_commit}`
     `git pull origin cilantro`
     `git reset --hard cilantro`
+      # Save the latest cilantro version that we're working from here.
+      ENV['GIT_DIR'] = ".git"
+      last_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
+      `git config cilantro.version #{last_commit}`
     p = IO.popen("patch --batch --verbose -p1", 'w')
     p.puts deliberate_diff
     p.close
