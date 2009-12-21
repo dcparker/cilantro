@@ -1,6 +1,5 @@
 require 'fileutils'
 gem 'dm-migrations'
-require 'dm-migrations/migration_runner'
 
 # This is a fix, at least for the linode server install of mysql
 module SQL
@@ -12,18 +11,23 @@ module SQL
 end
 
 namespace :db do
+
+  task :load_migration do
+    gem 'dm-migrations'
+    require 'dm-migrations/migration_runner'
+  end
   
   desc "Perform automigration"
-  task :automigrate do
+  task :automigrate => [:production_db, 'env:rake', :load_migration] do
     ::DataMapper::AutoMigrator.auto_migrate
   end
   desc "Perform non destructive automigration"
-  task :autoupgrade do
+  task :autoupgrade => [:production_db, 'env:rake', :load_migration] do
     ::DataMapper::AutoMigrator.auto_upgrade
   end
 
   namespace :migrate do
-    task :load do
+    task :load => [:production_db, 'env:rake', :load_migration] do
       FileList["config/migrations/*.rb"].each do |migration|
         load migration
       end

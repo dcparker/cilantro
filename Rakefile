@@ -1,9 +1,24 @@
 require 'fileutils'
 
-if File.exists?('lib/cilantro.rb')
-  require 'lib/cilantro'
+# Really need some way to determine what the RACK_ENV is "supposed" to be ..
+# or should it be set globally so we know our context?
+
+task :load_cilantro do
+  if File.exists?('lib/cilantro.rb')
+    require 'lib/cilantro'
+  else
+    raise "lib/cilantro.rb is missing!"
+  end
+end
+
+namespace :env do
+  task :rake => [:load_cilantro] { Cilantro.load_environment(:rake) }
+  task :development => [:load_cilantro] { Cilantro.load_environment(:development) }
+  task :production => [:load_cilantro] { Cilantro.load_environment(:production) }
+end
+
+task :production_db => [:load_cilantro] do
   Cilantro.database_config 'config/database.production.yml' if File.exists?('config/database.production.yml')
-  Cilantro.load_environment(:rake)
 end
 
 # Load any app level custom rakefile extensions from lib/tasks

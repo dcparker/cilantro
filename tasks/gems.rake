@@ -3,12 +3,7 @@
 # which will automatically install the gems with the right permissions.
 namespace :gems do
   namespace :refresh do
-    task :production do
-      Cilantro.load_environment :production
-    end
-
-    task :development do
-      Cilantro.load_environment :development
-    end
+    task :production  { Cilantro.load_environment :production  }
+    task :development { Cilantro.load_environment :development }
   end
 end
