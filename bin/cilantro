@@ -115,6 +115,11 @@ optparse = OptionParser.new do |opts|
     $options[:database_config] = conf
   end
 
+  $options[:message] = ''
+  opts.on( '-m MESSAGE', "Commit message for cilantro updates." ) do |m|
+    $options[:message] = m
+  end
+
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
     exit
@@ -400,14 +405,13 @@ begin
     IO.popen("patch -u --force --no-backup-if-mismatch -p1", 'w') {|p|
       p.puts cilantro_new_diff
     }
-    commit_msg = ARGV.last
     # Make a list of all the files added/modified:
     add_mod = cilantro_new_diff.scan(/^\+\+\+ b\/(.*)$/).flatten
     `git add \"#{add_mod.join('" "')}\"` unless add_mod.empty?
     # And a list of all the files that were deleted:
     deleted = cilantro_new_diff.scan(/^\-\-\- a\/(.*)$/).flatten - add_mod
     `git rm \"#{deleted.join('" "')}\"` unless deleted.empty?
-    `git commit -am \"#{commit_msg}\"`
+    `git commit -m \"#{$options[:message]}\"`
     `git push`
 
     # 4. restore the app to its original position
@@ -421,7 +425,7 @@ begin
 
     # 5. set git config cilantro.version to the new version
     `git config cilantro.version #{last_cilantro_commit}`
-    puts "Updated Cilantro: \"#{commit_msg}\""
+    puts "Updated Cilantro: \"#{$options[:message]}\""
   when 'git'
     unless ENV['GIT_DIR'] == "#{ENV['HOME']}/.cilantro.git"
       ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
