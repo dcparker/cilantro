@@ -2,12 +2,9 @@ require 'erb'
 
 module Cilantro
   class Template
-    class Erb
-      def initialize(options={})
-        @options = options
-      end
-
+    class Erb < Plain
       def render(template, context, locals)
+        erb_text = render_upstream(template, context, locals)
         # Set up a proxy object for the binding
         new_context = Object.new
         new_context.send(:instance_variable_set, :@context, context)
@@ -21,7 +18,7 @@ module Cilantro
         ")
         context = new_context.instance_eval("binding")
         # Now, use the new context (binding) for rendering
-        ::ERB.new(template.last).result(context)
+        ::ERB.new(erb_text).result(context)
       end
     end
   end

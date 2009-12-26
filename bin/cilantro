@@ -340,6 +340,8 @@ begin
     puts "Run 'git remote add origin ...' to add an origin for your project. Or if running on linode, simply run 'linode add domain.com'"
     puts "Whenever the cilantro project is updated, you can keep up to date by running 'cilantro update'"
     exec "mate ." if `which mate`
+  when 'update-shared'
+    # Maybe ... to update the shared repo without checking it out.
   when 'update'
     last_commit = `git config cilantro.version`.chomp
     ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
@@ -348,7 +350,7 @@ begin
       system "rm -rf .cgit.foobar"
     end
     last_commit ||= `git log -n1`.split(/\n/)[0].split(/\s/)[1]
-    deliberate_diff = `git diff #{last_commit}`
+    deliberate_diff = `git diff #{last_commit} -p`
     `git reset --hard #{last_commit}`
     `git pull origin cilantro`
     `git reset --hard cilantro`
@@ -360,10 +362,55 @@ begin
       puts "No changes to reapply."
     else
       puts "Reapplying app diff..."
-      p = IO.popen("patch --batch --verbose -p1", 'w')
-      p.puts deliberate_diff
-      p.close
+      IO.popen("patch --force --no-backup-if-mismatch -p1", 'w') {|p|
+        p.puts deliberate_diff
+      }
     end
+    puts "Updated to #{last_commit}."
+  when 'commit-push'
+    # git checkout -- .
+    # rm bin/cilantro.rej lib/cilantro/templater/bootstrap.rb.rej lib/cilantro/templater/markdown.rb.rej lib/cilantro/templater/plain.rb.rej lib/cilantro/templater.rb.rej lib/cilantro/templater/erb.rb.rej lib/cilantro/templater/haml.rb.rej
+    # This is to update the Cilantro repo from a separate app. It ASSUMES YOU HAVE ACCESS to do so, and that the shared cilantro repo is already up to date.
+    # 1. record a diff since the last commit in the project repo
+    puts "Recording state..."
+    cilantro_new_diff = `git diff --cached -p`
+    last_project_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
+
+    # 2. record changes since last cilantro update
+    last_cilantro_commit = `git config cilantro.version`.chomp
+    ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
+    if last_cilantro_commit != `git log -n1`.split(/\n/)[0].split(/\s/)[1]
+      puts "Cilantro is not up to date in this project! Try stashing the changes and saving them later, or save a patch file and reapply it after updating Cilantro in this project."
+      exit
+    end
+    # Take off all of the cilantro changes, to record the project changes since last cilantro update.
+    IO.popen("patch --verbose -R --force --no-backup-if-mismatch -p1", 'w') {|p|
+      p.puts cilantro_new_diff
+    }
+    project_diff = `git diff #{last_cilantro_commit} -p`
+
+    # 3. reset to vanilla cilantro, apply the new cilantro code, then commit and push the changes
+    `git reset --hard #{last_cilantro_commit}`
+    puts "Applying changes to Cilantro..."
+    IO.popen("patch --force --no-backup-if-mismatch -p1", 'w') {|p|
+      p.puts cilantro_new_diff
+    }
+    commit_msg = ARGV.last
+    `git add --all`
+    `git commit -am \"#{commit_msg}\"`
+    `git push`
+
+    # 4. restore the app to its original position
+    puts "Restoring app..."
+    last_cilantro_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
+    ENV['GIT_DIR'] = ".git"
+    IO.popen("patch --force --no-backup-if-mismatch -p1", 'w') {|p|
+      p.puts project_diff
+    }
+
+    # 5. set git config cilantro.version to the new version
+    `git config cilantro.version #{last_cilantro_commit}`
+    puts "Updated Cilantro: \"#{commit_msg}\""
   when 'git'
     unless ENV['GIT_DIR'] == "#{ENV['HOME']}/.cilantro.git"
       ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"

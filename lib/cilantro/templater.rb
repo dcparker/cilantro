@@ -2,6 +2,13 @@ module Cilantro
   class Template < String
     include Cilantro::Application
     class << self
+      def markups
+        @markups ||= []
+      end
+      def register_markup(match, klass)
+        markups << [match, klass]
+      end
+
       def options
         @options ||= {
           :default_layout => :default,
@@ -12,7 +19,7 @@ module Cilantro
       def get_template(name, namespace='/', ext=nil)
         view_paths(namespace).each do |vp|
           if file = Dir.glob(File.join([vp, "#{name}.#{ext ? ext : '*'}"]))[0]
-            return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
+            return file, File.read(file)
           end
         end
         nil
@@ -21,17 +28,32 @@ module Cilantro
       def get_partial(name, namespace='/', ext=nil)
         view_paths(namespace).each do |vp|
           if file = Dir.glob(File.join([vp, "#{options[:partial_prefix]}#{name}.#{ext ? ext : '*'}"]))[0]
-            return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
+            return file, File.read(file)
           end
         end
         nil
       end
 
-      def engine(type)
-        @engine ||= {}
-        @engine[type] ||= begin
-          require File.dirname(__FILE__) + '/templater/' + type.to_s
-          Cilantro::Template.const_get(type.to_s.capitalize!).new(options)
+      def engine(filename)
+        puts "Markups: #{Cilantro::Template.markups.inspect}"
+        markups = []
+        begin
+          none_found = true
+          Cilantro::Template.markups.each do |f|
+            if filename =~ f[0]
+              markups << f
+              # Chop off the end so we can now determine the next type
+              filename = filename.sub(f[0],'')
+              none_found = false
+              break
+            end
+          end
+        end until markups.last == Cilantro::Template.markups.last || none_found
+        raise RuntimeError, "Fatal Templater error: NO RENDERER found for file `#{filename}'" if markups.empty?
+        # Now we'll make the cascading renderer.
+        puts "Markups to be used, in order: #{markups.inspect}"
+        markups.reverse.inject(nil) do |last, markup|
+          Cilantro::Template.const_get(markup[1].to_s).new(options.merge(:upstream => last))
         end
       end
 
@@ -209,7 +231,7 @@ module Cilantro
     class << self
       def get_layout(name, ext=nil)
         if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
-          return file.match(/\.([^\.]+)$/)[1].to_sym, file, File.read(file)
+          return file, File.read(file)
         end
       end
     end
@@ -288,4 +310,5 @@ module Cilantro
   end
 end
 
+require 'cilantro/templater/bootstrap'
 Application.send(:include, Cilantro::Templater) if ::Object.const_defined?(:Application)
