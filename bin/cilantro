@@ -372,6 +372,11 @@ begin
     # rm bin/cilantro.rej lib/cilantro/templater/bootstrap.rb.rej lib/cilantro/templater/markdown.rb.rej lib/cilantro/templater/plain.rb.rej lib/cilantro/templater.rb.rej lib/cilantro/templater/erb.rb.rej lib/cilantro/templater/haml.rb.rej
     # This is to update the Cilantro repo from a separate app. It ASSUMES YOU HAVE ACCESS to do so, and that the shared cilantro repo is already up to date.
     # 1. record a diff since the last commit in the project repo
+    if $options[:message].empty?
+      puts "-m MESSAGE is NECESSARY when running commit-push!"
+      exit
+    end
+
     puts "Recording state..."
     cilantro_new_diff = `git diff --cached -p`
     last_project_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
