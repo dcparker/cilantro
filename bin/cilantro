@@ -356,9 +356,14 @@ begin
       last_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
       ENV['GIT_DIR'] = ".git"
       `git config cilantro.version #{last_commit}`
-    p = IO.popen("patch --batch --verbose -p1", 'w')
-    p.puts deliberate_diff
-    p.close
+    if deliberate_diff.empty? # This really will only happen on an unaltered cilantro repo.
+      puts "No changes to reapply."
+    else
+      puts "Reapplying app diff..."
+      p = IO.popen("patch --batch --verbose -p1", 'w')
+      p.puts deliberate_diff
+      p.close
+    end
   when 'git'
     unless ENV['GIT_DIR'] == "#{ENV['HOME']}/.cilantro.git"
       ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
