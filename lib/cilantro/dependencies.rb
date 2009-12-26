@@ -40,7 +40,17 @@ module Cilantro
           Cilantro.add_gem(name, :version => version)
           if !File.exists?("#{gempath}/gems/#{gem_name}")
             puts "Installing gem: #{gem_name}"
-            puts `gem pristine --config-file gems/gemrc.yml #{name} -v#{version}`
+            pristined = `gem pristine --config-file gems/gemrc.yml -v #{version} #{name}`
+            if $?.success?
+              puts pristined
+            else
+              direct = `gem install -i gems --no-rdoc --no-ri gems/cache/#{gem_name}.gem`
+              if $?.success?
+                puts direct
+              else
+                puts `gem install -i gems --no-rdoc --no-ri -v #{version} #{name}`
+              end
+            end
             # LEAVE THIS HERE FOR LATER REFERENCE - These two commands unpack gems folders. Might be quicker than gem pristine? (but doesn't compile any gem binary libraries)
             # `mkdir -p #{gempath}/gems/#{gem_name} #{no_debug}`
             # `tar -Oxf #{gempath}/cache/#{gem_name}.gem data.tar.gz | tar -zx -C #{gempath}/gems/#{gem_name}/ #{no_debug}`
@@ -62,12 +72,23 @@ module Kernel
     if options[:env] == RACK_ENV
       begin
         require name
-      rescue LoadError
+      rescue LoadError => e
         if File.directory?("#{APP_ROOT}/gems") && File.writable?("#{APP_ROOT}/gems")
-          puts "Installing #{options[:gem] || name}#{" -v "+options[:version] if options[:version]}..."
-          puts `gem install -i gems #{"-v "+options[:version] if options[:version]} #{options[:gem] || name}`
+          if e.respond_to?(:name) && e.respond_to?(:version_requirement)
+            puts "Installing #{e.name}#{" -v \""+e.version_requirement.to_s+'"' if e.version_requirement}..."
+            puts `gem install -i gems --no-rdoc --no-ri #{"-v \""+e.version_requirement.to_s+'"' if e.version_requirement} #{e.name}`
+          else
+            puts "Installing #{options[:gem] || name}#{" -v "+options[:version] if options[:version]}..."
+            puts `gem install -i gems --no-rdoc --no-ri #{"-v "+options[:version] if options[:version]} #{options[:gem] || name}`
+          end
           Gem.use_paths("#{APP_ROOT}/gems", ["#{APP_ROOT}/gems"])
-          require name
+          begin
+            require name
+          rescue LoadError
+            puts "(didn't work installing `#{name}' in path: #{Dir.pwd})"
+            puts "Load Path: #{$:.join("\n")}"
+            puts "Gem Path: #{Gem.path.inspect}"
+          end
         else
           raise
         end

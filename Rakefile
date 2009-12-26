@@ -12,9 +12,9 @@ task :load_cilantro do
 end
 
 namespace :env do
-  task :rake => [:load_cilantro] { Cilantro.load_environment(:rake) }
-  task :development => [:load_cilantro] { Cilantro.load_environment(:development) }
-  task :production => [:load_cilantro] { Cilantro.load_environment(:production) }
+  task(:rake => [:load_cilantro]) { Cilantro.load_environment(:rake) }
+  task(:development => [:load_cilantro]) { Cilantro.load_environment(:development) }
+  task(:production => [:load_cilantro]) { Cilantro.load_environment(:production) }
 end
 
 task :production_db => [:load_cilantro] do

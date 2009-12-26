@@ -1,5 +1,4 @@
 require 'fileutils'
-gem 'dm-migrations'
 
 # This is a fix, at least for the linode server install of mysql
 module SQL
