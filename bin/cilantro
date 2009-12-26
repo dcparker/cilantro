@@ -133,7 +133,7 @@ optparse.parse! unless ARGV[0] == 'git'
 $action = ARGV[0]
 directory = ARGV[1]
 if directory.nil?
-  if $action =~ /^(run|start|stop|status|restart|new|update|commit-push|git|gitwork)$/
+  if $action =~ /^(run|start|stop|status|restart|new|update|push|git)$/
     directory = Dir.pwd
   elsif $action.nil?
     directory = Dir.pwd
@@ -372,7 +372,7 @@ begin
       }
     end
     puts "Updated to #{last_commit}."
-  when 'commit-push'
+  when 'push'
     # git checkout -- .
     # rm bin/cilantro.rej lib/cilantro/templater/bootstrap.rb.rej lib/cilantro/templater/markdown.rb.rej lib/cilantro/templater/plain.rb.rej lib/cilantro/templater.rb.rej lib/cilantro/templater/erb.rb.rej lib/cilantro/templater/haml.rb.rej
     # This is to update the Cilantro repo from a separate app. It ASSUMES YOU HAVE ACCESS to do so, and that the shared cilantro repo is already up to date.

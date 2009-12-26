@@ -35,7 +35,6 @@ module Cilantro
       end
 
       def engine(filename)
-        puts "Markups: #{Cilantro::Template.markups.inspect}"
         markups = []
         begin
           none_found = true
@@ -51,7 +50,6 @@ module Cilantro
         end until markups.last == Cilantro::Template.markups.last || none_found
         raise RuntimeError, "Fatal Templater error: NO RENDERER found for file `#{filename}'" if markups.empty?
         # Now we'll make the cascading renderer.
-        puts "Markups to be used, in order: #{markups.inspect}"
         markups.reverse.inject(nil) do |last, markup|
           Cilantro::Template.const_get(markup[1].to_s).new(options.merge(:upstream => last))
         end
