@@ -414,7 +414,7 @@ begin
     `git commit -m \"#{$options[:message]}\"`
     `git push`
 
-    # 4. restore the app to its original position
+    # 4. restore the app to its original position and commit the cilantro update
     puts "Restoring app..."
     last_cilantro_commit = `git log -n1`.split(/\n/)[0].split(/\s/)[1]
     ENV['GIT_DIR'] = ".git"
@@ -422,6 +422,7 @@ begin
     IO.popen("patch --force --no-backup-if-mismatch -p1", 'w') {|p|
       p.puts project_diff
     }
+    `git commit -m \"#{$options[:message]}\"`
 
     # 5. set git config cilantro.version to the new version
     `git config cilantro.version #{last_cilantro_commit}`
