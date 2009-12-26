@@ -15,7 +15,7 @@ namespace :db do
     gem 'dm-migrations'
     require 'dm-migrations/migration_runner'
   end
-  
+
   desc "Perform automigration"
   task :automigrate => [:production_db, 'env:rake', :load_migration] do
     ::DataMapper::AutoMigrator.auto_migrate

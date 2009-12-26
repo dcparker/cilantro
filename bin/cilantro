@@ -343,11 +343,11 @@ begin
   when 'update'
     last_commit = `git config cilantro.version`.chomp
     ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
-    last_commit ||= `git log -n1`.split(/\n/)[0].split(/\s/)[1]
     unless File.directory?("#{ENV['HOME']}/.cilantro.git")
       system "git clone git://github.com/dcparker/cilantro.git .cgit.foobar"
       system "rm -rf .cgit.foobar"
     end
+    last_commit ||= `git log -n1`.split(/\n/)[0].split(/\s/)[1]
     deliberate_diff = `git diff #{last_commit}`
     `git reset --hard #{last_commit}`
     `git pull origin cilantro`
