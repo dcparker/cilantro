@@ -4,7 +4,7 @@ module Cilantro
   class << self
     attr_accessor :auto_reload
 
-    def load_environment(env=nil)
+    def load_config(env=nil)
       const_set("RACK_ENV", env) if env
       ENV['RACK_ENV'] = RACK_ENV.to_s
 
@@ -36,6 +36,11 @@ module Cilantro
           # @base_required = $LOADED_FEATURES.dup
         end
       # ****
+      @config_loaded = true
+    end
+
+    def load_environment(env=nil)
+      load_config(env) unless @config_loaded
 
       # Load the app pre-environment
       require 'config/init'
@@ -49,6 +54,18 @@ module Cilantro
         Dir.glob("app/controllers/*.rb").each {|file| require file} if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
 
       return true
+    end
+
+    def config_path
+      APP_ROOT + '/config'
+    end
+    def log_path
+      [APP_ROOT+'/log', APP_ROOT+'/config', Dir.pwd].each do |p|
+        break p if File.directory?(p) && File.writable?(p)
+      end || nil
+    end
+    def pid_path
+      log_path
     end
 
     def reload_environment

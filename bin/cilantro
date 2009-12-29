@@ -80,7 +80,7 @@ end
 $options = {}
 
 optparse = OptionParser.new do |opts|
-  opts.banner = "Usage: #{$0} [action=start] [directory=.] [options]"
+  opts.banner = "Usage: #{$0} [action=start|stop|status|restart|new|update|push|git] [directory=.] [options]"
 
   $options[:verbose] = false
   opts.on( '-v', '--verbose', "Show me what you're doing" ) do
@@ -378,7 +378,7 @@ begin
     # This is to update the Cilantro repo from a separate app. It ASSUMES YOU HAVE ACCESS to do so, and that the shared cilantro repo is already up to date.
     # 1. record a diff since the last commit in the project repo
     if $options[:message].empty?
-      puts "-m MESSAGE is NECESSARY when running commit-push!"
+      puts "-m MESSAGE is NECESSARY when running cilantro-push!"
       exit
     end
 
