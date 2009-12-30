@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+
+# Using the forking method below, we can spawn several
+# processes, loaded in this order:
+#   1) Spawner: spawns Worker processes on command by Listener.
+#   2) Worker: any number of these do the Request/Response work
+#   3) Listener: an EventMachineMini process that manages the
+#     spawned processes and proxies the HTTP traffic
+# 
+# The Listener process will start a minimum of two Workers by
+# telling the Spawner to spawn them. The Listener maintains
+# one open pipe between itself and each Worker through which it
+# sends requests and receives responses. It will know, then,
+# when a request has been completed by having received the
+# response. If at any point it needs more Workers, it can
+# very easily tell the Spawner to spawn another one, and then
+# immediately send the waiting request into the newly spawned
+# Worker.
+
+
+
+# The following is just an example to remind me how IO.popen and its pipes work.
+ios = []
+io = 0
+total = 200
+while ios.length < total && !io.nil?
+  io = IO.popen('-')
+  if io
+    ios << io
+  end
+end
+
+if ios.length < total
+  # puts Process.pid
+else
+  puts "IOs: #{ios.length}"
+  Process.waitall
+  ios.each do |io|
+    # puts io.readlines
+  end
+end
+
+exit
