@@ -70,6 +70,7 @@ module Cilantro
       log_path
     end
 
+    attr_reader :server_options
     def set_options(options)
       @server_options ||= {}
       @server_options.merge!(options)
