@@ -197,15 +197,9 @@ def run_app!
   # Do need to think about what to do when reloading the app fails due to error.
   # Also could implement the EM way to finish outstanding requests before quitting.
 
-  Kernel.trap('HUP') {
-    exit
-  }
-  at_exit {
-    puts "Restarting..."
-    exec "#{$0} #{ARGV.join(' ')}"
-  } if RACK_ENV == :development && $action == 'run'
   begin
-    Cilantro.app.run!
+    server = Rack::Handler.get('thin')
+    server.run Cilantro.app, :Host => $options[:host], :Port => $options[:port]
   rescue RuntimeError => e
     if e.to_s == 'no acceptor'
       warn "\n\t*** Can't use port #{$options[:port]}, someone's already there! ***\n"

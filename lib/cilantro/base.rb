@@ -18,7 +18,6 @@ module Cilantro
         # If in development or production mode, we need to load up Sinatra:
         puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{RACK_ENV.inspect}" unless RACK_ENV == :test
         if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
-          require 'cilantro/auto_reload' if auto_reload
           require 'cilantro/sinatra'
           # @base_constants = ::Object.constants - ['Application']
           # @base_required = $LOADED_FEATURES.dup - ['cilantro/sinatra.rb']
@@ -42,8 +41,11 @@ module Cilantro
     def load_environment(env=nil)
       load_config(env) unless @config_loaded
 
-      # Load the app pre-environment
-      require 'config/init'
+      # Load the app pre-environment. This reloads with auto-reloading.
+      load 'config/init.rb'
+
+      # If config/init sets auto-reload, then don't load the rest of the app - save that for the auto-spawned processes.
+      return false if auto_reload && require('cilantro/auto_reload')
 
       # Lastly, we'll load the app files themselves: lib, models, then controllers
         # lib/*.rb - those already loaded won't be reloaded.
@@ -68,27 +70,18 @@ module Cilantro
       log_path
     end
 
-    def reload_environment
-      # added_constants = ::Object.constants - @base_constants
-      # added_constants.each do |const|
-      #   begin
-      #     ::Object.send(:remove_const, const.to_sym)
-      #   rescue NameError
-      #   end
-      # end
-      # $LOADED_FEATURES.replace(@base_required)
-      load_environment
-      set_options @server_options
-    end
-
     def set_options(options)
       @server_options ||= {}
       @server_options.merge!(options)
-      Cilantro.app.set @server_options
+      ::Application.set @server_options
     end
 
     def app
-      defined?(::Application) ? ::Application : nil
+      if auto_reload # if auto-reload, the "app" is the auto-reloader
+        @reloader ||= Cilantro::AutoReloader.new
+      else # otherwise, we're either NOT auto-reloading, or we're "inside" the auto-reloader
+        ::Application
+      end
     end
 
     def config
