@@ -71,6 +71,6 @@ class Main < Application
   # This is not yet limited to just one controller or namespace.
   error do
     Cilantro.report_error(env['sinatra.error'])
-    template :default_error_page
+    view :default_error_page
   end
 end

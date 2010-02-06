@@ -16,7 +16,7 @@ module Cilantro
         }
       end
 
-      def get_template(name, namespace='/', ext=nil)
+      def get_view(name, namespace='/', ext=nil)
         view_paths(namespace).each do |vp|
           if file = Dir.glob(File.join([vp, "#{name}.#{ext ? ext : '*'}"]))[0]
             return file, File.read(file)
@@ -79,9 +79,9 @@ module Cilantro
       @namespace = namespace[1]
       @layout = Layout.new(@controller, locals.delete(:layout), @namespace) if locals[:layout]
       # load view helpers
-      if template_helper = Template.get_template(@name, @namespace, 'rb')
+      if view_helper = Template.get_view(@name, @namespace, 'rb')
         @html = :helper
-        instance_eval(template_helper.last)
+        instance_eval(view_helper.last)
         @html = :rendering
       end
     end
@@ -98,13 +98,13 @@ module Cilantro
       @html ||= begin
         @html = :rendering
         replace @name.inspect + ' in ' + @namespace
-        if template = Template.get_template(@name, @namespace)
-          content_for_layout = render(template, self, locals)
+        if view = Template.get_view(@name, @namespace)
+          content_for_layout = render(view, self, locals)
           @layout ?
             @layout.render!(content_for_layout) :
             content_for_layout
         else
-          raise RuntimeError, "Could not find template `#{@name}' from namespace #{@namespace}", caller
+          raise RuntimeError, "Could not find view `#{@name}' from namespace #{@namespace}", caller
         end
       end
       replace @html
@@ -187,8 +187,8 @@ module Cilantro
       end
     end
 
-    def render(template_package, context, locals)
-      self.class.engine(template_package.first).render(template_package, context, locals.merge(:layout => @layout))
+    def render(view_package, context, locals)
+      self.class.engine(view_package.first).render(view_package, context, locals.merge(:layout => @layout))
     end
 
     def insert_section(name)
@@ -208,7 +208,7 @@ module Cilantro
       end
 
       return @locals.has_key?(name) || @locals.has_key?(:"unrendered_#{name}") if sign == '?'
-      raise NoMethodError, "no variable or method `#{name}' for template #{self}", caller if @html == :rendering
+      raise NoMethodError, "no variable or method `#{name}' for view #{self}", caller if @html == :rendering
 
       if sign == '='
         @locals[name] = value
@@ -239,7 +239,7 @@ module Cilantro
       @name = name
       @locals = {}
       @namespace = namespace
-      # load template helper if present
+      # load view helper if present
       if layout_helper = Layout.get_layout(@name, 'rb')
         @html = :helper
         instance_eval(layout_helper.last)
@@ -275,19 +275,19 @@ module Cilantro
       @layout_name = name
     end
 
-    # Method: template
+    # Method: view
     # Inputs: optionally, name and locals
-    # Output: a template object, and whenever a name is given, set the name. Default to :default template if none given.
-    def template(name=nil, locals={})
+    # Output: a view object, and whenever a name is given, set the name. Default to :default view if none given.
+    def view(name=nil, locals={})
       locals = {:layout => @layout_name}.merge(locals) if @layout_name
-      @template ||= Template.new(self, name || :default, locals)
-      @template.name = name if name
-      # Set the namespace into the template as soon as we seem to be inside of the action code.
-      @template.set_namespace(self.class.namespaces[caller[0].match(/`(.*?)'/)[1]]) if caller[0] =~ /[A-Z]+ /
+      @view ||= Template.new(self, name || :default, locals)
+      @view.name = name if name
+      # Set the namespace into the view as soon as we seem to be inside of the action code.
+      @view.set_namespace(self.class.namespaces[caller[0].match(/`(.*?)'/)[1]]) if caller[0] =~ /[A-Z]+ /
       if block_given?
-        yield @template
+        yield @view
       end
-      return @template
+      return @view
     end
 
     # Method: respond_to

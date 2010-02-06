@@ -3,8 +3,8 @@ require 'erb'
 module Cilantro
   class Template
     class Erb < Plain
-      def render(template, context, locals)
-        erb_text = render_upstream(template, context, locals)
+      def render(view, context, locals)
+        erb_text = render_upstream(view, context, locals)
         # Set up a proxy object for the binding
         new_context = Object.new
         new_context.send(:instance_variable_set, :@context, context)

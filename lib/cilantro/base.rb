@@ -165,10 +165,10 @@ module Cilantro
     # Example: 
     # > namespace = '/people'
     # > get 'new' do 
-    # >   template :new
+    # >   view :new
     # > end
     # > # GET /people/new
-    # > #  -> action is run, template is found in: /views/people/new.haml
+    # > #  -> action is run, view is found in: /views/people/new.haml
     def namespace(new_namespace=nil,name=nil,&block)
       raise ArgumentError, "Scope must be a string, a symbol, or a hash with string values." if !new_namespace.nil? && !(new_namespace.is_a?(String) || new_namespace.is_a?(Symbol) || new_namespace.is_a?(Hash))
       @namespace ||= '/'

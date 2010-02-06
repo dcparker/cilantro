@@ -1,8 +1,9 @@
 module Cilantro
   class Template
     # Markdown
-    autoload(:ErbMarkdown, 'cilantro/templater/markdown')
-    register_markup(/\.md$/, :ErbMarkdown)
+    autoload(:Markdown, 'cilantro/templater/markdown')
+    register_markup(/\.markdown$/, :Markdown)
+    register_markup(/\.md$/, :Markdown)
 
     # Erb
     autoload(:Erb, 'cilantro/templater/erb')

@@ -21,10 +21,10 @@ end
 module Cilantro
   class Template
     class Haml < Plain
-      def render(template, context, locals)
-        haml_text = render_upstream(template, context, locals)
+      def render(view, context, locals)
+        haml_text = render_upstream(view, context, locals)
         # Haml is pretty simple!
-        ::Haml::Engine.new(haml_text, :filename => template[1]).render(context, locals)
+        ::Haml::Engine.new(haml_text, :filename => view[1]).render(context, locals)
       end
     end
   end
