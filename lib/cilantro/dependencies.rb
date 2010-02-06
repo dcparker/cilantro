@@ -13,7 +13,7 @@ module Cilantro
       else
         gems[name] = options
       end
-      if RACK_ENV == :development
+      if env == :development
         open(".gems", 'w') do |f|
           gems.keys.sort.each do |name|
             options = gems[name]
@@ -68,8 +68,8 @@ end
 module Kernel
   def dependency(name, options={})
     options[:only_env] = options[:env]
-    options[:env] = RACK_ENV unless options[:env]
-    if options[:env] == RACK_ENV
+    options[:env] = ENV['RACK_ENV'] unless options[:env]
+    if options[:env] == ENV['RACK_ENV']
       begin
         require name
       rescue LoadError => e

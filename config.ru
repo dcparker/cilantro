@@ -3,7 +3,7 @@
 # Read configuration, if there is any
 require 'yaml'
 $config = YAML.load_file("#{directory}/config/production.yml") rescue {}
-RACK_ENV = (ENV['RACK_ENV'] ||= ($config[:environment] || 'development').to_s).to_sym
+ENV['RACK_ENV'] ||= ($config[:environment] || 'development').to_s
 require 'lib/cilantro'
 
 Cilantro.database_config $config[:database_config] if $config[:database_config]

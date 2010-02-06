@@ -100,7 +100,7 @@ optparse = OptionParser.new do |opts|
   end
 
   ENV['RACK_ENV'] = 'development'
-  opts.on( '-e', '--environment ENV', "Set the environment manually (defaults to RACK_ENV or development)") do |env|
+  opts.on( '-e', '--environment ENV', "Set the environment manually (defaults to ENV['RACK_ENV'] or development)") do |env|
     $options[:manual_environment] = ENV['RACK_ENV'] = env
   end
 
@@ -115,18 +115,13 @@ optparse = OptionParser.new do |opts|
     $options[:database_config] = conf
   end
 
-  $options[:message] = ''
-  opts.on( '-m MESSAGE', "Commit message for cilantro updates." ) do |m|
-    $options[:message] = m
-  end
-
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
     exit
   end
 end
 
-# FIRST default setting, if there is a file named RACK_ENV, read it. Or assume development until told otherwise.
+# FIRST default setting, if there is a file named ENV['RACK_ENV'], read it. Or assume development until told otherwise.
 ENV['RACK_ENV'] = File.exists?('RACK_ENV') ? File.read('RACK_ENV').chomp : 'development'
 optparse.parse! unless ARGV[0] == 'git'
 
@@ -178,8 +173,6 @@ end
 # Start our stuff
 Dir.chdir(directory) if File.directory?(directory)
 write_dir = File.directory?('log') ? 'log' : 'config'
-
-RACK_ENV = ENV['RACK_ENV'].to_sym
 
 def run_app!
   require 'lib/cilantro'
@@ -375,10 +368,6 @@ begin
     # rm bin/cilantro.rej lib/cilantro/templater/bootstrap.rb.rej lib/cilantro/templater/markdown.rb.rej lib/cilantro/templater/plain.rb.rej lib/cilantro/templater.rb.rej lib/cilantro/templater/erb.rb.rej lib/cilantro/templater/haml.rb.rej
     # This is to update the Cilantro repo from a separate app. It ASSUMES YOU HAVE ACCESS to do so, and that the shared cilantro repo is already up to date.
     # 1. record a diff since the last commit in the project repo
-    if $options[:message].empty?
-      puts "-m MESSAGE is NECESSARY when running cilantro-push!"
-      exit
-    end
 
     puts "Recording state..."
     cilantro_new_diff = `git diff --cached -p`
@@ -409,7 +398,10 @@ begin
     # And a list of all the files that were deleted:
     deleted = cilantro_new_diff.scan(/^\-\-\- a\/(.*)$/).flatten - add_mod
     `git rm \"#{deleted.join('" "')}\"` unless deleted.empty?
-    `git commit -m \"#{$options[:message]}\"`
+    $stdout << "Commit message (^D when finished): "
+    commit_message = $stdin.readlines
+    
+    `git commit -m \"#{commit_message}\"`
     `git push`
 
     # 4. restore the app to its original position and commit the cilantro update
@@ -420,11 +412,11 @@ begin
     IO.popen("patch --force --no-backup-if-mismatch -p1", 'w') {|p|
       p.puts project_diff
     }
-    `git commit -m \"#{$options[:message]}\"`
+    `git commit -m \"#{commit_message}\"`
 
     # 5. set git config cilantro.version to the new version
     `git config cilantro.version #{last_cilantro_commit}`
-    puts "Updated Cilantro: \"#{$options[:message]}\""
+    puts "Updated Cilantro: \"#{commit_message}\""
   when 'git'
     unless ENV['GIT_DIR'] == "#{ENV['HOME']}/.cilantro.git"
       ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"

@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 require 'cilantro/FileMonitor'
 
+puts "Auto-reloading entire app when any project files are modified..."
+
 String::ALPHANUMERIC_CHARACTERS = ('a'..'z').to_a + ('A'..'Z').to_a
 def String.random(size)
   length = String::ALPHANUMERIC_CHARACTERS.length

@@ -2,11 +2,18 @@ require File.dirname(__FILE__)+'/cilantro/system/mysql_fix' if File.exists?(File
 
 module Cilantro
   class << self
-    attr_accessor :auto_reload
+    def env
+      ENV['RACK_ENV'].to_sym
+    end
+
+    attr_writer :auto_reload
+    def auto_reload
+      # auto_reload only works when Cilantro is the master process
+      $0 =~ /(^|\/)cilantro$/ && @auto_reload
+    end
 
     def load_config(env=nil)
-      const_set("RACK_ENV", env) if env
-      ENV['RACK_ENV'] = RACK_ENV.to_s
+      env ||= self.env
 
       $: << APP_ROOT unless $:.include?(APP_ROOT)
       $: << APP_ROOT+'/lib' unless $:.include?(APP_ROOT+'/lib')
@@ -14,31 +21,27 @@ module Cilantro
       # Prepare our dependency-loading environment
       require 'cilantro/dependencies'
 
-      # Beginning with RACK_ENV, we determine which pieces of the app's environment need to be loaded.
+      # Beginning with env, we determine which pieces of the app's environment need to be loaded.
         # If in development or production mode, we need to load up Sinatra:
-        puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{RACK_ENV.inspect}" unless RACK_ENV == :test
-        if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
+        puts @something_changed ? "Reloading the app..." : "Loading Cilantro environment #{env.inspect}" unless env == :test
+        if [:development, :test, :production].include?(env)
           require 'cilantro/sinatra'
-          # @base_constants = ::Object.constants - ['Application']
-          # @base_required = $LOADED_FEATURES.dup - ['cilantro/sinatra.rb']
           set_options(
             :static => true,
             :public => 'public',
             :server => (auto_reload ? 'thin_cilantro_proxy' : 'thin'),
             :logging => true,
-            :raise_errors => (RACK_ENV == :production),
-            :show_exceptions => !(RACK_ENV == :production),
-            :environment => RACK_ENV
+            :raise_errors => (env == :production),
+            :show_exceptions => !(env == :production),
+            :environment => env
           )
-        else
-          # @base_constants = ::Object.constants
-          # @base_required = $LOADED_FEATURES.dup
         end
       # ****
       @config_loaded = true
     end
 
     def load_environment(env=nil)
+      env ||= self.env
       load_config(env) unless @config_loaded
 
       # Load the app pre-environment. This reloads with auto-reloading.
@@ -53,7 +56,7 @@ module Cilantro
         # app/models/*.rb
         Dir.glob("app/models/*.rb").each {|file| require file}
         # app/controllers/*.rb UNLESS in irb
-        Dir.glob("app/controllers/*.rb").each {|file| require file} if RACK_ENV == :development || RACK_ENV == :production || RACK_ENV == :test
+        Dir.glob("app/controllers/*.rb").each {|file| require file} if [:development, :production, :test].include?(env)
 
       return true
     end
@@ -86,7 +89,7 @@ module Cilantro
     end
 
     def config
-      @config ||= ((YAML.load_file("#{APP_ROOT}/config/cilantro.yml") if File.exists?("#{APP_ROOT}/config/cilantro.yml")) || {})
+      @config ||= ((YAML.load_file("#{APP_ROOT}/config/#{env}.yml") if File.exists?("#{APP_ROOT}/config/#{env}.yml")) || {})
     end
 
     def database_config(file=nil)
@@ -96,7 +99,7 @@ module Cilantro
         @database_config_file ||= "#{APP_ROOT}/config/database.yml"
         if File.exists?(@database_config_file)
           cfg = (YAML.load_file(@database_config_file) || {})
-          cfg = (cfg[RACK_ENV] || cfg[RACK_ENV.to_s]) if (cfg[RACK_ENV] || cfg[RACK_ENV.to_s]).is_a?(Hash)
+          cfg = (cfg[env] || cfg[env.to_s]) if (cfg[env] || cfg[env.to_s]).is_a?(Hash)
           cfg = (cfg[:database] || cfg['database']) if (cfg[:database] || cfg['database']).is_a?(Hash)
         end
 

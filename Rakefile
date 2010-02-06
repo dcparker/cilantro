@@ -1,6 +1,6 @@
 require 'fileutils'
 
-# Really need some way to determine what the RACK_ENV is "supposed" to be ..
+# Really need some way to determine what the ENV['RACK_ENV'] is "supposed" to be ..
 # or should it be set globally so we know our context?
 
 task :load_cilantro do
