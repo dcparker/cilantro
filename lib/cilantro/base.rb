@@ -93,22 +93,30 @@ module Cilantro
     end
 
     def database_config(file=nil)
-      if file
-        @database_config_file = file
-      else
-        @database_config_file ||= "#{APP_ROOT}/config/database.yml"
-        if File.exists?(@database_config_file)
-          cfg = (YAML.load_file(@database_config_file) || {})
-          cfg = (cfg[env] || cfg[env.to_s]) if (cfg[env] || cfg[env.to_s]).is_a?(Hash)
-          cfg = (cfg[:database] || cfg['database']) if (cfg[:database] || cfg['database']).is_a?(Hash)
-        end
+      @database_config ||= begin
+        if file
+          @database_config_file = file
+        else
+          cfg = nil
+          [@database_config_file, config[:database_config], "#{APP_ROOT}/config/database.#{env}.yml", "#{APP_ROOT}/config/database.yml"].compact.any? do |config_file|
+            if File.exists?(config_file)
+              @database_config_file = config_file
+              cfg = (YAML.load_file(@database_config_file) || {}) rescue {}
+              cfg = (cfg[env] || cfg[env.to_s]) if (cfg[env] || cfg[env.to_s]).is_a?(Hash)
+              cfg = (cfg[:database] || cfg['database']) if (cfg[:database] || cfg['database']).is_a?(Hash)
+              cfg
+            else
+              false
+            end
+          end
 
-        unless cfg
-          warn "Cannot set up the database: Config information (#{@database_config_file}) missing!"
-          exit
-        end
+          unless cfg
+            warn "Cannot set up the database: No database config file (config/database.#{env}.yml or config/database.yml) present!"
+            exit
+          end
 
-        cfg
+          cfg
+        end
       end
     end
 
