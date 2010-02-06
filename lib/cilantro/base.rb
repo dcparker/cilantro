@@ -2,7 +2,8 @@ require File.dirname(__FILE__)+'/cilantro/system/mysql_fix' if File.exists?(File
 
 module Cilantro
   class << self
-    def env
+    def env(e=nil)
+      ENV['RACK_ENV'] = e.to_s if e
       ENV['RACK_ENV'].to_sym
     end
 
@@ -13,7 +14,7 @@ module Cilantro
     end
 
     def load_config(env=nil)
-      env ||= self.env
+      env ||= self.env(env)
 
       $: << APP_ROOT unless $:.include?(APP_ROOT)
       $: << APP_ROOT+'/lib' unless $:.include?(APP_ROOT+'/lib')
@@ -41,7 +42,7 @@ module Cilantro
     end
 
     def load_environment(env=nil)
-      env ||= self.env
+      env ||= self.env(env)
       load_config(env) unless @config_loaded
 
       # Load the app pre-environment. This reloads with auto-reloading.

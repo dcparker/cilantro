@@ -2,6 +2,7 @@ require 'fileutils'
 
 # Really need some way to determine what the ENV['RACK_ENV'] is "supposed" to be ..
 # or should it be set globally so we know our context?
+ENV['RACK_ENV'] = 'rake'
 
 task :load_cilantro do
   if File.exists?('lib/cilantro.rb')
