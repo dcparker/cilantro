@@ -48,9 +48,10 @@ module Cilantro
             end
           end
         end until markups.last == Cilantro::Template.markups.last || none_found
+        markups.unshift(markups.pop) # Rotate the plaintext markup to the beginning
         raise RuntimeError, "Fatal Templater error: NO RENDERER found for file `#{filename}'" if markups.empty?
         # Now we'll make the cascading renderer.
-        markups.reverse.inject(nil) do |last, markup|
+        markups.inject(nil) do |last, markup|
           Cilantro::Template.const_get(markup[1].to_s).new(options.merge(:upstream => last))
         end
       end
@@ -249,7 +250,11 @@ module Cilantro
     end
 
     def render!(content_for_layout)
-      render(@layout, self, locals.merge(:content_for_layout => content_for_layout))
+      if @layout
+        render(@layout, self, locals.merge(:content_for_layout => content_for_layout))
+      else
+        content_for_layout
+      end
     end
   end
 
