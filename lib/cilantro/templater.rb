@@ -229,7 +229,7 @@ module Cilantro
   class Layout < Template
     class << self
       def get_layout(name, ext=nil)
-        if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext ? ext : '*'}")[0]
+        if file = Dir.glob("#{APP_ROOT}/app/views/layouts/#{name}.#{ext || '*'}")[0]
           return file, File.read(file)
         end
       end

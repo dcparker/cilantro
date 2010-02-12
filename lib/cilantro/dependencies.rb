@@ -17,7 +17,7 @@ module Cilantro
         open(".gems", 'w') do |f|
           gems.keys.sort.each do |name|
             options = gems[name]
-            next if options[:only_env] == :development
+            next if options[:only_env] == 'development'
             gem_def = name.dup
             gem_def << " --version '#{options[:version]}'" if options[:version]
             f << gem_def << "\n"
@@ -67,6 +67,7 @@ end
 #   c) If in development, and dependency is needed in production, write itself to .gems.
 module Kernel
   def dependency(name, options={})
+    options[:env] = options[:env].to_s if options[:env]
     options[:only_env] = options[:env]
     options[:env] = ENV['RACK_ENV'] unless options[:env]
     if options[:env] == ENV['RACK_ENV']
