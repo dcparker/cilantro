@@ -27,6 +27,11 @@ class FileMonitor
     @watched = []
   end
 
+  def inspect
+    puts "#<FileMonitor>"
+  end
+  alias :to_s :inspect
+
   def add(item, &callback)
     if File.file? item
       h = {:file=>File.expand_path(item), :callback=>callback}

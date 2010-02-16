@@ -111,9 +111,9 @@ module Cilantro
       replace @html
       @html
     end
-    def to_json
+    def to_json(*args)
       dependency 'json'
-      locals.to_json
+      locals.to_json(*args)
     end
     def to_xml
       locals.to_xml

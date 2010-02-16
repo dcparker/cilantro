@@ -77,6 +77,21 @@ def report_error(e)
   end
 end
 
+def gets_multiline
+  input = ''
+  loop do
+    $stdout << '  '
+    input << $stdin.readline.chomp
+    if input =~ /\\$/
+      input.chop!
+      input << "\n"
+    else
+      break
+    end
+  end
+  input.gsub(/\"/,"\\\"")
+end
+
 $options = {}
 
 optparse = OptionParser.new do |opts|
@@ -155,7 +170,7 @@ when File.exists?("#{directory}/config/#{ENV['RACK_ENV']}.yml")
 else
   {}
 end || {}
-ENV['RACK_ENV'] = $config[:environment] if $config[:environment] && !$options[:manual_environment]
+ENV['RACK_ENV'] = $config[:environment].to_s if $config[:environment] && !$options[:manual_environment]
 
 if ($options[:config] || (!$options[:specified_port] && File.exists?("#{directory}/config/#{ENV['RACK_ENV']}.yml"))) && $action =~ /start/
   if $config.is_a?(Hash)
@@ -394,8 +409,8 @@ begin
     # And a list of all the files that were deleted:
     deleted = cilantro_new_diff.scan(/^\-\-\- a\/(.*)$/).flatten - add_mod
     `git rm \"#{deleted.join('" "')}\"` unless deleted.empty?
-    $stdout << "Commit message (^D when finished): "
-    commit_message = $stdin.readlines
+    puts "Commit message (\\ for new lines):"
+    commit_message = gets_multiline
     
     `git commit -m \"#{commit_message}\"`
     `git push`

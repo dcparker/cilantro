@@ -107,6 +107,7 @@ module Cilantro
             received_message(env)
           rescue Object => e
             puts "ERROR: #{e.inspect}\n#{e.backtrace.join("\n")}"
+            @to_parent.puts @boundary
           end
         end
       end
@@ -115,7 +116,6 @@ module Cilantro
         # Automatically loads app if not already loaded.
         # puts "[C] Calling app (#{Cilantro.app.inspect})."
         status, headers, body = Cilantro.app.call(env)
-        # puts "Response ready (#{status})"
 
         @to_parent.puts JSON.generate([status, headers.to_hash, slurp(body)])
         @to_parent.puts @boundary
@@ -123,12 +123,17 @@ module Cilantro
 
       private
         def slurp(body)
-          return body    if body.respond_to? :to_ary
-          return [body]  if body.respond_to? :to_str
-
-          buf = []
-          body.each { |part| buf << part }
-          buf
+          if body.respond_to? :to_ary
+            return body.to_ary.collect {|b| slurp(b)}
+          elsif body.respond_to?(:to_str)
+            body.to_str
+          elsif body.respond_to?(:to_s)
+            body.to_s
+          else
+            buf = []
+            body.each { |part| buf << part }
+            buf
+          end
         end
       
     end # class AppProcess
@@ -188,6 +193,8 @@ module Cilantro
         [500, {'Content-Type'=>'text/html;charset=utf-8'}, [format_error(result)]]
       end
       # puts "[P] Received: " + reply.inspect
+      # puts "[P] Parsed: " + result.inspect
+      result
     end
 
     def app_updated?
