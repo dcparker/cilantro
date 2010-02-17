@@ -260,7 +260,7 @@ module Cilantro
     private
       def route(method, in_path, opts, &bk)
         if in_path.is_a?(Hash)
-          return in_path.inject([]) do |rts,(name,path)|
+          return in_path.inject([]) do |rts,(path,name)|
             path = path_with_namespace(path)
             # puts "Route: #{method} #{path[0]}"
             # Save the namespace with this route
