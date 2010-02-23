@@ -4,7 +4,7 @@ module Cilantro
   class << self
     def env(e=nil)
       ENV['RACK_ENV'] = e.to_s if e
-      ENV['RACK_ENV'].to_sym
+      (ENV['RACK_ENV'] ||= 'development').to_sym
     end
 
     attr_writer :auto_reload
