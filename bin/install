@@ -11,13 +11,13 @@
 ::Dir.mkdir "#{ENV['HOME']}/.bin" unless ::File.directory? "#{ENV['HOME']}/.bin"
 
 # Append the path through an export in your startup script file
-unless Regexp.new("#{ENV['HOME']}/.bin") === ENV['PATH']
+unless Regexp.new("#{ENV['HOME']}/.bin") === ENV['PATH'] || Regexp.new("~/.bin") === ENV['PATH']
   profile = false
   ["#{ENV['HOME']}/.bash_profile", "#{ENV['HOME']}/.profile", "#{ENV['HOME']}/.bashrc"].each do |file|
     profile = file if ::File.exists? file
   end
   ::File.open(profile ||= "#{ENV['HOME']}/.bash_profile", 'a') do |f|
-    f << "export PATH=~/.bin:$PATH\n"
+    f << "\nexport PATH=~/.bin:$PATH\n"
   end
   
   puts "Installed ~/.bin to PATH (added export to #{profile})"

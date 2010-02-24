@@ -2,4 +2,6 @@ config/development.sqlite
 gems/gems
 gems/doc
 gems/bin
+gems/cache
+gems/specifications
 .DS_Store
