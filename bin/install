@@ -13,7 +13,7 @@
 # Append the path through an export in your startup script file
 unless Regexp.new("#{ENV['HOME']}/.bin") === ENV['PATH']
   profile = false
-  ["#{ENV['HOME']}/.bashrc", "#{ENV['HOME']}/.profile", "#{ENV['HOME']}/.bash_profile"].each do |file|
+  ["#{ENV['HOME']}/.bash_profile", "#{ENV['HOME']}/.profile", "#{ENV['HOME']}/.bashrc"].each do |file|
     profile = file if ::File.exists? file
   end
   ::File.open(profile ||= "#{ENV['HOME']}/.bash_profile", 'a') do |f|
@@ -23,8 +23,8 @@ unless Regexp.new("#{ENV['HOME']}/.bin") === ENV['PATH']
   puts "Installed ~/.bin to PATH (added export to #{profile})"
 end
 
+`mkdir -p /usr/local/bin`
 if `cp #{File.dirname(__FILE__)}/cilantro /usr/local/bin/`
-  # `cp #{File.dirname(__FILE__)}/cilantro #{ENV['HOME']}/.bin`
   puts "Installed cilantro to /usr/local/bin"
 else
   puts "Could not install cilantro into /usr/local/bin. Please run as root to do so. This is necessary for creating new cilantro projects."
