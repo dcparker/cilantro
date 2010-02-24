@@ -22,39 +22,39 @@ module Cilantro
             gem_def << " --version '#{options[:version]}'" if options[:version]
             f << gem_def << "\n"
           end
-        end if File.writable?('.gems')
+        end if File.writable?('.gems') # this won't run if the file doesn't exist either :)
       end
     end
 
     def install_missing_gems
       gempath = "#{APP_ROOT}/gems"
-      if File.exists?(gempath)
-        # Redirect standard output to the netherworld
-        no_debug = '2>&1 >/dev/null'
+      return unless File.exists?(gempath)
 
-        all_gems = ""
-        # Ensure each gem in gems/cache is installed
-        Dir.glob("#{gempath}/cache/*.gem").each do |gem_name|
-          gem_name = gem_name.match(/([^\/]+)\.gem/)[1]
-          j, name, version = *gem_name.match(/^(.*)-([\d\.]+)$/)
-          Cilantro.add_gem(name, :version => version)
-          if !File.exists?("#{gempath}/gems/#{gem_name}")
-            puts "Installing gem: #{gem_name}"
-            pristined = `gem pristine --config-file gems/gemrc.yml -v #{version} #{name}`
+      # Redirect standard output to the netherworld
+      no_debug = '2>&1 >/dev/null'
+
+      all_gems = ""
+      # Ensure each gem in gems/cache is installed
+      Dir.glob("#{gempath}/cache/*.gem").each do |gem_name|
+        gem_name = gem_name.match(/([^\/]+)\.gem/)[1]
+        j, name, version = *gem_name.match(/^(.*)-([\d\.]+)$/)
+        Cilantro.add_gem(name, :version => version)
+        if !File.exists?("#{gempath}/gems/#{gem_name}")
+          puts "Installing gem: #{gem_name}"
+          pristined = `gem pristine --config-file gems/gemrc.yml -v #{version} #{name}`
+          if $?.success?
+            puts pristined
+          else
+            direct = `gem install -i gems --no-rdoc --no-ri gems/cache/#{gem_name}.gem`
             if $?.success?
-              puts pristined
+              puts direct
             else
-              direct = `gem install -i gems --no-rdoc --no-ri gems/cache/#{gem_name}.gem`
-              if $?.success?
-                puts direct
-              else
-                puts `gem install -i gems --no-rdoc --no-ri -v #{version} #{name}`
-              end
+              puts `gem install -i gems --no-rdoc --no-ri -v #{version} #{name}`
             end
-            # LEAVE THIS HERE FOR LATER REFERENCE - These two commands unpack gems folders. Might be quicker than gem pristine? (but doesn't compile any gem binary libraries)
-            # `mkdir -p #{gempath}/gems/#{gem_name} #{no_debug}`
-            # `tar -Oxf #{gempath}/cache/#{gem_name}.gem data.tar.gz | tar -zx -C #{gempath}/gems/#{gem_name}/ #{no_debug}`
           end
+          # LEAVE THIS HERE FOR LATER REFERENCE - These two commands unpack gems folders. Might be quicker than gem pristine? (but doesn't compile any gem binary libraries)
+          # `mkdir -p #{gempath}/gems/#{gem_name} #{no_debug}`
+          # `tar -Oxf #{gempath}/cache/#{gem_name}.gem data.tar.gz | tar -zx -C #{gempath}/gems/#{gem_name}/ #{no_debug}`
         end
       end
     end
