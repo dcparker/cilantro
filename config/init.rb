@@ -17,23 +17,23 @@ Cilantro.auto_reload = true
 ###################
 # Section: Dependencies and Libraries
 require 'cilantro/templater'
-require 'openssl'
-require 'base64'
-require 'cgi'
-dependency 'json'
+# require 'openssl'
+# require 'base64'
+# require 'cgi'
+# dependency 'json'
 
 
 ###################
 # Section: Database Setup
-dependency 'sqlite3', :gem => 'sqlite3-ruby', :env => :development
-dependency 'do_sqlite3', :env => :development
-dependency 'do_mysql', :env => :production
-dependency 'dm-core'
-dependency 'data_objects'
-dependency 'dm-types'
-dependency 'dm-migrations'
+# dependency 'sqlite3', :gem => 'sqlite3-ruby', :env => :development
+# dependency 'do_sqlite3', :env => :development
+# dependency 'do_mysql', :env => :production
+# dependency 'dm-core'
+# dependency 'data_objects'
+# dependency 'dm-types'
+# dependency 'dm-migrations'
 # dependency 'dm-validations'
 
 # Uncomment this to fire up a connection to the database using settings from config/database.yml config
 # It's configured for DataMapper by default, you can set up your own connection routine here instead.
-Cilantro.setup_database
+# Cilantro.setup_database
