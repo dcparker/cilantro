@@ -13,7 +13,7 @@ module Cilantro
     autoload(:Haml, 'cilantro/templater/haml')
     register_markup(/\.haml$/, :Haml)
 
-    # LAST, add the plain markup which will be the fallback.
+    # LASTLY, add the plaintext markup which will be the fallback.
     autoload(:Plain, 'cilantro/templater/plain')
     register_markup(/.*/, :Plain)
   end

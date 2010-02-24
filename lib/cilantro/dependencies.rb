@@ -66,6 +66,11 @@ end
 #   b) If not installed and is possible to install, INSTALL IT.
 #   c) If in development, and dependency is needed in production, write itself to .gems.
 module Kernel
+  def debugger
+    dependency 'ruby-debug'
+    debugger
+  end
+
   def dependency(name, options={})
     options[:env] = options[:env].to_s if options[:env]
     options[:only_env] = options[:env]

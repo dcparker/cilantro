@@ -253,7 +253,7 @@ module Cilantro
     end
 
     def helper(name, &block)
-      puts "Defining helper #{self.name.to_s + '_' + name.to_s}"
+      warn "Defining helper #{self.name.to_s + '_' + name.to_s}"
       application.send(:define_method, self.name.to_s + '_' + name.to_s, &block)
     end
 
@@ -262,7 +262,7 @@ module Cilantro
         if in_path.is_a?(Hash)
           return in_path.inject([]) do |rts,(path,name)|
             path = path_with_namespace(path)
-            # puts "Route: #{method} #{path[0]}"
+            # warn "Route: #{method} #{path[0]}"
             # Save the namespace with this route
             application.namespaces["#{method} #{path[0]}"] = [self, namespace]
             # Register the path with Sinatra's routing engine
@@ -275,7 +275,7 @@ module Cilantro
           end
         elsif in_path.is_a?(Symbol)
           path = path_with_namespace('')
-          # puts "Route: #{method} #{path[0]}"
+          # warn "Route: #{method} #{path[0]}"
           # Save the namespace with this route
           application.namespaces["#{method} #{path[0]}"] = [self, namespace]
           # Register the path with Sinatra's routing engine
@@ -287,7 +287,7 @@ module Cilantro
           return rt
         else
           path = path_with_namespace(in_path)
-          # puts "Route: #{method} #{path[0]}"
+          # warn "Route: #{method} #{path[0]}"
           # Save the namespace with this route
           application.namespaces["#{method} #{path[0]}"] = [self, namespace]
           # Register the path with Sinatra's routing engine

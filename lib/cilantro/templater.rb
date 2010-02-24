@@ -1,4 +1,13 @@
 module Cilantro
+  # Views
+  # Methods available publicly on a view:
+  #   .to_s
+  #   .to_str
+  #   .to_html
+  #   .to_json
+  #   .to_xml
+  #   .coerce
+  # All other methods called shall be handled by method_missing.
   class Template < String
     include Cilantro::Application
     class << self
