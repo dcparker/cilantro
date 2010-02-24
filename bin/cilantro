@@ -343,14 +343,14 @@ begin
       system "git clone git://github.com/dcparker/cilantro.git \"#{directory}\""
     end
     # Track the starter branch
-    system "git checkout --track -b starter origin/starter 2>1 1>/dev/null"
+    system "git checkout --track -b starter origin/starter 2>&1 1>/dev/null"
     # Check it out
-    system "git checkout starter 2>1 1>/dev/null"
+    system "git checkout starter 2>&1 1>/dev/null"
     # Update it
     puts "Getting updated Cilantro starter app..."
-    system "git pull 2>1 1>/dev/null"
+    system "git pull 2>&1 1>/dev/null"
     # Reset all files
-    system "git reset --hard starter 2>1 1>/dev/null"
+    system "git reset --hard starter 2>&1 1>/dev/null"
     # Initialize the local git repo
     ENV['GIT_DIR'] = ".git"
     system "git init"
@@ -358,11 +358,11 @@ begin
     system "git commit -m 'Initialized Cilantro starter app.'"
     # Get back onto the cilantro branch and save latest cilantro commit we're updated to
     ENV['GIT_DIR'] = "#{ENV['HOME']}/.cilantro.git"
-    system "git checkout cilantro 2>1 1>/dev/null"
+    system "git checkout cilantro 2>&1 1>/dev/null"
     last_commit ||= `git log -n1`.split(/\n/)[0].split(/\s/)[1]
     ENV['GIT_DIR'] = ".git"
     system "git config cilantro.version #{last_commit}"
-    system "git reset --hard master 2>1 1>/dev/null"
+    system "git reset --hard master 2>&1 1>/dev/null"
 
     puts "Run 'git remote add origin ...' to add an origin for your project. Or if running on linode, simply run 'linode add domain.com'"
     puts "Whenever the cilantro project is updated, you can keep up to date by running 'cilantro update'"
