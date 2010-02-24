@@ -1,5 +1,6 @@
 daemons --version '1.0.10'
 eventmachine --version '0.12.10'
+json --version '1.2.0'
 rack --version '1.1.0'
 sinatra --version '0.9.4'
 thin --version '1.2.5'
