@@ -347,6 +347,7 @@ begin
     # Check it out
     system "git checkout starter 2>1 1>/dev/null"
     # Update it
+    puts "Getting updated Cilantro starter app..."
     system "git pull 2>1 1>/dev/null"
     # Reset all files
     system "git reset --hard starter 2>1 1>/dev/null"

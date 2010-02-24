@@ -23,8 +23,8 @@ unless Regexp.new("#{ENV['HOME']}/.bin") === ENV['PATH'] || Regexp.new("~/.bin")
   puts "Installed ~/.bin to PATH (added export to #{profile})"
 end
 
-`mkdir -p /usr/local/bin`
-if `cp #{File.dirname(__FILE__)}/cilantro /usr/local/bin/`
+`sudo mkdir -p /usr/local/bin`
+if `sudo cp #{File.dirname(__FILE__)}/cilantro /usr/local/bin/`
   puts "Installed cilantro to /usr/local/bin"
 else
   puts "Could not install cilantro into /usr/local/bin. Please run as root to do so. This is necessary for creating new cilantro projects."
@@ -50,10 +50,10 @@ end
 puts "Installed ~/.bin/cilantro."
 
 
-unless File.directory?("#{ENV['HOME']}/.cilantro.git")
+unless File.directory?("#{ENV['HOME']}/.cilantro.git") && File.directory?("#{ENV['HOME']}/.cilantro")
   Dir.chdir(ENV['HOME'])
-  `git clone git://github.com/dcparker/cilantro.git .cilantro-tmp`
-  `mv .cilantro-tmp/.git .cilantro.git`
-  `rm -rf .cilantro-tmp`
+  `rm -rf .cilantro .cilantro.git` # remove any that might already exist
+  `git clone git://github.com/dcparker/cilantro.git .cilantro`
+  `mv .cilantro/.git .cilantro.git`
   puts "Installed ~/.cilantro.git"
 end
