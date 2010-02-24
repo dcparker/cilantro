@@ -20,7 +20,6 @@ require 'cilantro/templater'
 # require 'openssl'
 # require 'base64'
 # require 'cgi'
-# dependency 'json'
 
 
 ###################
