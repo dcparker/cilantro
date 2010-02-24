@@ -70,7 +70,7 @@ module Kernel
     options[:env] = options[:env].to_s if options[:env]
     options[:only_env] = options[:env]
     options[:env] = ENV['RACK_ENV'] unless options[:env]
-    if options[:env] == ENV['RACK_ENV']
+    if options[:env] == ENV['RACK_ENV'] || ENV['RACK_ENV'] == 'test'
       begin
         require name
       rescue LoadError => e
