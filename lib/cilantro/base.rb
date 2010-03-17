@@ -304,18 +304,21 @@ module Cilantro
       end
 
       def path_with_namespace(path)
+        ns = namespace =~ /\/$/ ? namespace : namespace + '/'
+        # warn "Namespace: #{ns.inspect}; Path: #{path.inspect}"
         if path.is_a?(Regexp)
           # Scope should be already sanitized to NOT end with a slash.
           # Path should NOT be sanitized since it's a Regexp.
           # Scope + Path should be joined with a slash IF the path regexp does not begin with a '.'
-          scrx, needs = application.send(:compile, namespace)
+          scrx, needs = application.send(:compile, ns)
+          # warn "Scrx: #{scrx.inspect}, Needs: #{needs.inspect}"
           [Regexp.new(scrx.source.sub(/^\^/,'').sub(/\$$/,'') + path.source.sub(/^\^/,'').sub(/\$$/,'')), needs]
         else
           # Scope should be already sanitized to NOT end with a slash.
           # Path should be sanitized to NOT begin with a slash, and OPTIONALLY end with a slash.
           # Scope + Path should be joined with a slash IF the path string does not begin with a '.'
           # (namespace + (path =~ /^\./ || path == '' ? '' : '/') + path).gsub(/\/\/+/,'/')
-          application.send(:compile, namespace + path.gsub(/^\//,''))
+          application.send(:compile, ns + path.gsub(/^\//,''))
         end
       end
   end
